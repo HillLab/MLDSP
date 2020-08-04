@@ -1,5 +1,5 @@
 # MLDSP
-
+### Please only pull & push on the dev branch if you are modifying the MLDSP code 
 MLDSP: Machine Learning with Digital Signal Processing for ultrafast, accurate, and scalable genome classfication at all taxonomic levels
 
 ###### Author: Gurjit Singh Randhawa
