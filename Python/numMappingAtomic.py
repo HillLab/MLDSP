@@ -1,13 +1,12 @@
 import numpy as np
 
 def numMappingAtomic(sq):
-    """computes atomic representation
+    """computes Atomic representation
 
     Keyword arguments:
-    sq:
+    sq: sequence
     """
-    sqLen = len(sq)
-    numSeq = np.zeros((1, sqLen))
+    numSeq = np.zeros(len(sq))
     for idx, val in enumerate(sq):
         if val == 'A':
             numSeq[idx] = 70
@@ -17,3 +16,4 @@ def numMappingAtomic(sq):
             numSeq[idx] = 78
         elif val == 'T':
             numSeq[idx] = 66
+        return numSeq
