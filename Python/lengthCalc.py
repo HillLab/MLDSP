@@ -10,4 +10,6 @@ def lengthCalc(seqList):
     maxLen = max(lenList)
     minLen = min(lenList)
     meanLen = mean(lenList)
-    medLen = median()
+    medLen = median(lenList)
+
+    return maxLen, minLen, meanLen, medLen
