@@ -12,5 +12,5 @@ def interClusdist(Cluster,uniqueClusters,disMat, numberOfClusters):
                 continue;            
             else
                 dT = disMat[cInd[i],cInd[j]]
-                avgDisB[i,j] = mean(m1, 1);  
-                avgDisB[j,i] = avgDisB[i,j];
+                avgDisB[i,j] = mean[m1, 1]  
+                avgDisB[j,i] = avgDisB[i,j]
