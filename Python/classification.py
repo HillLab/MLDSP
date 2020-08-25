@@ -14,7 +14,7 @@ def classify_dismat(dismat, alabels, folds, total):
     kf = KFold(n_splits=folds, shuffle=False)
     model_names = [SVC(kernel='linear'), SVC(kernel='poly', degree=2), SVC(kernel='rbf'), LinearDiscriminantAnalysis(), KNeighborsClassifier()]
     accuracies = np.zeros(shape=(folds, len(model_names)))
-    for i in len(model_names):
+    for i in range(len(model_names)):
         model_name = model_names[i]
         model = make_pipeline(StandardScaler(), model_name)
         k = 0
