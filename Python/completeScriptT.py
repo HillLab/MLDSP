@@ -3,23 +3,19 @@ import numpy as np
 from multiprocessing import Pool
 from spicy.stats import pearsonr
 
-# sett up
+# set up
 dataSet = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup'
 testingSet = 'NoData'
-#testingSet = 'F:\Exterm17Dec\Test4\Test\HalophileBacteria';
-seqToTest=0
+seqToTest=0 
 minSeqLen = 0
 maxSeqLen = 0
 fragsPerSeq = 1
-
-
-# select method
 methods_list = {'CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR'};
 method_num=1; # change method number referring the variable above (between 1 and 16)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
-# preProcess data
+# preprocess data
 seq, ac_nmb, points_per_cluster, total_seq = 0,0,0,0 # TODO: assume from preprocess
 max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
 
