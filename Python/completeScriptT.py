@@ -2,11 +2,12 @@ from spicy import fft
 import numpy as np
 from multiprocessing import Pool
 from spicy.stats import pearsonr
-
+import Bio
+from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
 # set up
 dataSet = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup'
 testingSet = 'NoData'
-seqToTest=0 
+seqToTest=0
 minSeqLen = 0
 maxSeqLen = 0
 fragsPerSeq = 1
@@ -27,14 +28,14 @@ abs_fft_output_list = []
 
 def compute_method_11_15(seq_index):
     seq_new = upper(seq[seq_index]);
-    if method_num==15:            
+    if method_num==15:
         seq_new = seq_new.replace('G', 'A')
-        seq_new = seq_new.replacce('C','T');       
+        seq_new = seq_new.replacce('C','T');
     cgr_output = cgr(seq_new,'ACGT',k_val) # shape:[2^k, 2^k]
     cgr_output_list.append(cgr_output)
     fft_output = fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list.append(fft_output)
-    abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array 
+    abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
 
 
 def compute_method_16(seq_index):
@@ -45,7 +46,7 @@ def compute_method_16(seq_index):
     cgr_output_list.append(cgr_output)
     fft_output = fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list.append(fft_output)
-    abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array 
+    abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
 
 
 def compute_pearson_coeffient(x, y):
@@ -77,8 +78,16 @@ for i in range(total_seq):
 
 # Multi-dimensional Scaling: TODO
 # 3D  plot: TODO
-# Phylogenetic Tree: TODO
+# Phylogenetic Tree: TODO # not tested
 
+def phylogenetic_tree(distance_matrix):
+    constructor = DistanceTreeConstructor()
+    nj_tree = constructor.nj(distance_matrix)
+    # newick may not be need to be quoted
+    neighbour_joining_tree = nj_tree.format('newick')
+    upgma = constructor.upgma(distance_matrix)
+    upgma_tree = upgma.format('newick')
+    # can add code here for visualization with matplotlib
 
 # Classification
 labels =[]
