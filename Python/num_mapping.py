@@ -1,5 +1,6 @@
-  
 import numpy as np
+from multiprocessing import Pool
+from spicy import fft
 
 def num_mapping_AT_CG(sq):
     """computes paired numeric representation
@@ -69,7 +70,6 @@ def num_mapping_Doublet(sq):
     doublet = ['AA','AT','TA','AG','TT','TG','AC','TC','GA','CA','GT','GG','CT','GC','CG','CC']
     num_seq = np.zeros(len(sq))
     # alpha = 0 # TODO: remove alpha for now, if alpha is added, then Codons also needs to be updated
-    kStrings = (2*alpha)+1
     
     for idx in range(sq_len):
         # if alpha == 0:
@@ -129,7 +129,7 @@ def num_mapping_justA(sq):
     Keyword arguments:
     sq: sequence
     """
-    return numMappingJustX(sq, 'A')
+    return num_mapping_justX(sq, 'A')
 
 def num_mapping_justC(sq):
     """computes JustC representation
@@ -197,3 +197,36 @@ def num_mapping_Real(sq):
         elif val == 'T':
             num_seq[idx] = 1.5
         return num_seq
+
+
+
+
+def one_dnum_rep_mapping(seq, method_num, med_len, total_seq):
+    pool = Pool()
+    n_seq = []
+    ns_list = np.zeros(total_seq)
+    fft_output_list = np.zeros(total_seq)
+    abs_fft_output_list = np.zeros(total_seq)
+    def shorten_seq(seq_index):
+        ns = seq[seq_index].upper()
+        ind = med_len-len(ns)
+        if ind < 0:
+            seq[seq_index] = ns[:med_len+1]
+    pool.map(shorten_seq, range(range(total_seq)))
+
+    method_num_to_function = {2: num_mapping_PP, 3: num_mapping_Int, 4:num_mapping_IntN, 5: num_mapping_Real, 6:num_mapping_Real, 7:num_mapping_Codons, 8:num_mapping_Atomic, 9:num_mapping_EIIP, 10: num_mapping_AT_CG, 11: num_mapping_justA, 12: num_mapping_justC, 13: num_mapping_justG, 14: num_mapping_justT}
+    def call_methods(seq_index):
+        n_seq[seq_index] = method_num_to_function[method_num](seq[seq_index])
+    pool.map(call_methods, range(total_seq))
+
+    def extend_seq(seq_index):
+        ns = n_seq[seq_index]
+        ind = med_len - len(ns)
+        
+        if ind > 0:
+            ns_list[seq_index] = np.pad(ns, ind, 'symmetric')[ind:] #TODO: anitisymmetric in Matlab
+        else:
+            ns_list[seq_index] = ns
+        fft_output_list[seq_index] = fft(ns_list[seq_index])
+        abs_fft_output_list[seq_index] = abs(fft_output_list[seq_index])
+    pool.map(extend_seq, range(total_seq))
