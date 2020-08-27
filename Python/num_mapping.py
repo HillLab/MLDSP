@@ -1,6 +1,6 @@
 import numpy as np
 from multiprocessing import Pool
-from spicy import fft
+from scipy import fft
 
 def num_mapping_AT_CG(sq):
     """computes paired numeric representation
@@ -19,7 +19,6 @@ def num_mapping_AT_CG(sq):
             num_seq[idx] = -1
         return num_seq
 
-import numpy as np
 
 def num_mapping_Atomic(sq):
     """computes Atomic representation
@@ -37,6 +36,7 @@ def num_mapping_Atomic(sq):
         elif val == 'T':
             num_seq[idx] = 66
         return num_seq
+
 
 def num_mapping_Codons(sq, X):
     """computes Codon representation
@@ -61,6 +61,7 @@ def num_mapping_Codons(sq, X):
         num_seq[idx] = tp
     return num_seq
 
+
 def num_mapping_Doublet(sq):
     """computes Doublet representation
     Keyword arguments:
@@ -81,6 +82,7 @@ def num_mapping_Doublet(sq):
         num_seq[idx] = tp
     return num_seq
 
+
 def num_mapping_EIIP(sq):
     """computes EIIP representation
     Keyword arguments:
@@ -98,6 +100,7 @@ def num_mapping_EIIP(sq):
             num_seq[idx] = 0.1335
         return num_seq
 
+
 def num_mapping_Int(sq):
     """computes Integer representation
     Keyword arguments:
@@ -110,6 +113,7 @@ def num_mapping_Int(sq):
         num_seq[idx] = dob.find(val) #TODO: check -1
 
     return num_seq
+
 
 def num_mapping_IntN(sq):
     """computes Integer (other variant) representation
@@ -124,12 +128,14 @@ def num_mapping_IntN(sq):
 
     return num_seq
 
+
 def num_mapping_justA(sq):
     """computes JustA representation
     Keyword arguments:
     sq: sequence
     """
     return num_mapping_justX(sq, 'A')
+
 
 def num_mapping_justC(sq):
     """computes JustC representation
@@ -138,6 +144,7 @@ def num_mapping_justC(sq):
     """
     return num_mapping_justX(sq, 'C')
 
+
 def num_mapping_justG(sq):
     """computes JustG representation
     Keyword arguments:
@@ -145,12 +152,14 @@ def num_mapping_justG(sq):
     """
     return num_mapping_justX(sq, 'G')
 
+
 def num_mapping_justT(sq):
     """computes JustT representation
     Keyword arguments:
     sq: sequence
     """
     return num_mapping_justX(sq, 'T')
+
 
 def num_mapping_justX(sq, X):
     """computes JustX representation
@@ -163,6 +172,7 @@ def num_mapping_justX(sq, X):
     for idx, val in enumerate(sq):
         num_seq[idx] =  1 if (val == X) else 0
     return num_seq
+
 
 def num_mapping_PP(sq):
     """computes Purine/Pyramidine representation
@@ -181,6 +191,7 @@ def num_mapping_PP(sq):
             num_seq[idx] = 1
         return num_seq
 
+
 def num_mapping_Real(sq):
     """computes Real representation
     Keyword arguments:
@@ -197,8 +208,6 @@ def num_mapping_Real(sq):
         elif val == 'T':
             num_seq[idx] = 1.5
         return num_seq
-
-
 
 
 def one_dnum_rep_mapping(seq, method_num, med_len, total_seq):
