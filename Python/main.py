@@ -4,20 +4,25 @@ from multiprocessing import Pool
 from spicy.stats import pearsonr
 import Bio
 from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
+from classification import classify_dismat
+from num_mapping import *
+from preprocessing import *
+from helpers import *
+
 # set up
-dataSet = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup'
-testingSet = 'NoData'
-seqToTest=0
-minSeqLen = 0
-maxSeqLen = 0
-fragsPerSeq = 1
-methods_list = {'CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR'};
-method_num=1; # change method number referring the variable above (between 1 and 16)
+data_set = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup'
+test_set = 'NoData'
+seq_to_test=0
+min_seq_len = 0
+max_seq_len = 0
+frags_per_seq = 1
+methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
+method_num=0; # change method number referring the variable above (between 1 and 16)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
 # preprocess data
-seq, ac_nmb, points_per_cluster, total_seq = 0,0,0,0 # TODO: assume from preprocess
+seq, ac_nmb, points_per_cluster, total_seq = preprocessing(data_set) # TODO: not completed 
 max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
 
 fprintf('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n');
@@ -59,12 +64,12 @@ def compute_pearson_coeffient_wrapper(indices):
 
 pool = Pool()
 if method_num == 1 or method_num == 15:
-    pool.map(compute_method_11_15, total_seq)
+    pool.map(compute_method_11_15, range(total_seq))
     # TODO: don't understand what reshape on line 85 mean
     # shape: [number of points, ((2^k)^2)]
 elif method_num == 16:
     cgr_len = 2**k_val
-    pool.map(compute_method_16, total_seq)
+    pool.map(compute_method_16, range(total_seq))
 else:
     fft_output_list, abs_fft_output_list, cgr_output_list = oneDnumRepMethods(seq, method_num, med_len, total_seq) # TODO: oneDumRepMethods impl
 # compute pearson correlation coefficient using parallel programming
@@ -99,7 +104,7 @@ print('Performing classification .... \n');
 folds=10
 if (total_seq<folds):
     folds = totalSeq
-[accuracy, avg_accuracy, clNames, cMat] = classificationCode(distance_matrix,labels, folds, total_seq);
+[accuracy, avg_accuracy, clNames, cMat] = classify_dismat(distance_matrix,labels, folds, total_seq);
 accuracies = [accuracy, avg_accuracy];
 
 fprintf('**** Processing completed ****\n');

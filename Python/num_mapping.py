@@ -210,7 +210,7 @@ def num_mapping_Real(sq):
         return num_seq
 
 
-def one_dnum_rep_mapping(seq, method_num, med_len, total_seq):
+def one_dim_num_rep_mapping(seq, method_num, med_len, total_seq):
     pool = Pool()
     n_seq = []
     ns_list = np.zeros(total_seq)
@@ -223,7 +223,7 @@ def one_dnum_rep_mapping(seq, method_num, med_len, total_seq):
             seq[seq_index] = ns[:med_len+1]
     pool.map(shorten_seq, range(range(total_seq)))
 
-    method_num_to_function = {2: num_mapping_PP, 3: num_mapping_Int, 4:num_mapping_IntN, 5: num_mapping_Real, 6:num_mapping_Real, 7:num_mapping_Codons, 8:num_mapping_Atomic, 9:num_mapping_EIIP, 10: num_mapping_AT_CG, 11: num_mapping_justA, 12: num_mapping_justC, 13: num_mapping_justG, 14: num_mapping_justT}
+    method_num_to_function = {1: num_mapping_PP, 2: num_mapping_Int, 3:num_mapping_IntN, 4: num_mapping_Real, 5:num_mapping_Real, 6:num_mapping_Codons, 7:num_mapping_Atomic, 8:num_mapping_EIIP, 9: num_mapping_AT_CG, 10: num_mapping_justA, 11: num_mapping_justC, 12: num_mapping_justG, 13: num_mapping_justT}
     def call_methods(seq_index):
         n_seq[seq_index] = method_num_to_function[method_num](seq[seq_index])
     pool.map(call_methods, range(total_seq))

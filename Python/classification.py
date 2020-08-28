@@ -9,7 +9,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.neighbors import KNeighborsClassifier
 
-# classificationCode in Matlab
 def classify_dismat(dismat, alabels, folds, total):
     kf = KFold(n_splits=folds, shuffle=False)
     model_names = [SVC(kernel='linear'), SVC(kernel='poly', degree=2), SVC(kernel='rbf'), LinearDiscriminantAnalysis(), KNeighborsClassifier()]
