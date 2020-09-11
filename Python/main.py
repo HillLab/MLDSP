@@ -1,7 +1,7 @@
-from spicy import fft
+from scipy import fft
 import numpy as np
 from multiprocessing import Pool
-from spicy.stats import pearsonr
+from scipy.stats import pearsonr
 import Bio
 from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
 from classification import classify_dismat
@@ -10,20 +10,22 @@ from preprocessing import *
 from helpers import *
 
 # set up
-data_set = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup'
+data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
 max_seq_len = 0
 frags_per_seq = 1
 methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
-method_num=0; # change method number referring the variable above (between 1 and 16)
+methods_list[16]
+method_num=0; # change method number referring the variable above (between 0 and 15)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
 # preprocess data
-seq, ac_nmb, points_per_cluster, total_seq = preprocessing(data_set) # TODO: not completed 
-max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
+preprocessing(data_set)
+# not needed since python has builtins & were loading seqs progressively
+#max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
 
 fprintf('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n');
 
@@ -31,7 +33,7 @@ cgr_output_list = []
 fft_output_list = []
 abs_fft_output_list = []
 
-def compute_method_11_15(seq_index):
+def compute_method_10_14(seq_index):
     seq_new = upper(seq[seq_index]);
     if method_num==15:
         seq_new = seq_new.replace('G', 'A')
@@ -43,7 +45,7 @@ def compute_method_11_15(seq_index):
     abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
 
 
-def compute_method_16(seq_index):
+def compute_method_15(seq_index):
     sq_new = upper(seq(seq_index))
     seq_new = seq_new.replacce('G', 'A')
     seq_new = seq_new.replacce('C', 'T')
