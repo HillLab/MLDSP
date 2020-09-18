@@ -11,13 +11,14 @@ from helpers import *
 
 # set up
 data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
+data_set
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
 max_seq_len = 0
 frags_per_seq = 1
 methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
-methods_list[16]
+methods_list[13]
 method_num=0; # change method number referring the variable above (between 0 and 15)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 

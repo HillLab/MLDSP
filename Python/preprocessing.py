@@ -1,6 +1,6 @@
 from Bio import SeqIO
 import os
-
+#directory = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
 
 def preprocessing(directory):
     """Function to process fasta files in top-level directory, extract cluster
@@ -10,8 +10,6 @@ def preprocessing(directory):
 
     """
     data = []
-    #directory = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
-    # outputs list of all subfolders in directory i.e. names of each cluster
     cluster_names = os.listdir(directory)
     cluster_sample_count={}
     # count of the number of clusters as int
@@ -40,6 +38,4 @@ def preprocessing(directory):
             Seq_record = SeqIO.index(file_path, "fasta")
             cluster_samples.append(Seq_record)
         data.append(cluster_samples)
-
-
-   return data, cluster_names, number_of_clusters, cluster_sample_count
+    return data, cluster_names, number_of_clusters, cluster_sample_count
