@@ -6,12 +6,12 @@ import Bio
 from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
 from classification import classify_dismat
 from num_mapping import *
-from preprocessing import *
+from preprocessing import preprocessing
 from helpers import *
-
+#cd /Users/dolteanu/local_documents/MLDSP/Python
+pwd
 # set up
 data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
-data_set
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
@@ -23,9 +23,11 @@ method_num=0; # change method number referring the variable above (between 0 and
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
-# preprocess data
-preprocessing(data_set)
+# there's probably a more appropriate way to import variables from a module
+data, cluster_names, number_of_clusters, cluster_sample_count = preprocessing(data_set)
+
 # not needed since python has builtins & were loading seqs progressively
+
 #max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
 
 fprintf('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n');
@@ -34,9 +36,10 @@ cgr_output_list = []
 fft_output_list = []
 abs_fft_output_list = []
 
+
 def compute_method_10_14(seq_index):
     seq_new = upper(seq[seq_index]);
-    if method_num==15:
+    if method_num==14:
         seq_new = seq_new.replace('G', 'A')
         seq_new = seq_new.replacce('C','T');
     cgr_output = cgr(seq_new,'ACGT',k_val) # shape:[2^k, 2^k]

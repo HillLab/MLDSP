@@ -71,7 +71,7 @@ def num_mapping_Doublet(sq):
     doublet = ['AA','AT','TA','AG','TT','TG','AC','TC','GA','CA','GT','GG','CT','GC','CG','CC']
     num_seq = np.zeros(len(sq))
     # alpha = 0 # TODO: remove alpha for now, if alpha is added, then Codons also needs to be updated
-    
+
     for idx in range(sq_len):
         # if alpha == 0:
         if idx < (sq_len-1):
@@ -231,7 +231,7 @@ def one_dim_num_rep_mapping(seq, method_num, med_len, total_seq):
     def extend_seq(seq_index):
         ns = n_seq[seq_index]
         ind = med_len - len(ns)
-        
+
         if ind > 0:
             ns_list[seq_index] = np.pad(ns, ind, 'symmetric')[ind:] #TODO: anitisymmetric in Matlab
         else:

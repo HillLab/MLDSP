@@ -9,6 +9,7 @@ def preprocessing(directory):
 
 
     """
+    global data
     data = []
     cluster_names = os.listdir(directory)
     cluster_sample_count={}
@@ -21,14 +22,14 @@ def preprocessing(directory):
         # get path for cluster as str
         cluster_samples = []
         cluster_samples.append(cluster)
-        cluster_path = os.path.join(directory, cluster)
+        cluster_p = os.path.join(directory, cluster)
         # get names of files in cluster as list of str
-        file_name = os.listdir(cluster_path)
+        file_name = os.listdir(cluster_p)
         # Add the number of files in cluster as dict of cluster name: file count
         cluster_sample_count.update({cluster: len(file_name)})
         for file in file_name:
             # get path for each file in cluster as str
-            file_path = os.path.join(cluster_path, file)
+            file_path = os.path.join(cluster_p, file)
             # Add the fasta file's contents to a dict of
             # sequence accession : BioPython SeqRecord ()
             # without storing the dict in memory, this
