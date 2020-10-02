@@ -38,5 +38,6 @@ def preprocessing(directory):
             # data types
             Seq_record = SeqIO.index(file_path, "fasta")
             cluster_samples.append(Seq_record)
-        data.append(cluster_samples)
+            data.append(Seq_record)
+        # data.append(cluster_samples)
     return data, cluster_names, number_of_clusters, cluster_sample_count

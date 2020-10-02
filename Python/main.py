@@ -24,7 +24,7 @@ k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
 # there's probably a more appropriate way to import variables from a module
-data, cluster_names, number_of_clusters, cluster_sample_count = preprocessing(data_set)
+seq, cluster_names, number_of_clusters, cluster_sample_count = preprocessing(data_set)
 
 # not needed since python has builtins & were loading seqs progressively
 
