@@ -8,7 +8,7 @@ from classification import classify_dismat
 from num_mapping import *
 from preprocessing import preprocessing
 from helpers import *
-#cd /Users/dolteanu/local_documents/MLDSP/Python
+cd /Users/dolteanu/local_documents/MLDSP/Python
 pwd
 # set up
 data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
@@ -18,14 +18,14 @@ min_seq_len = 0
 max_seq_len = 0
 frags_per_seq = 1
 methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
-methods_list[13]
-method_num=0; # change method number referring the variable above (between 0 and 15)
+method_num=14; # change method number referring the variable above (between 0 and 15)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
 # there's probably a more appropriate way to import variables from a module
-seq, cluster_names, number_of_clusters, cluster_sample_count = preprocessing(data_set)
-
+seq, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluster_dict = preprocessing(data_set)
+for seqio in seq:
+    seqio.get()
 # not needed since python has builtins & were loading seqs progressively
 
 #max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
@@ -36,9 +36,12 @@ cgr_output_list = []
 fft_output_list = []
 abs_fft_output_list = []
 
-
 def compute_method_10_14(seq_index):
-    seq_new = upper(seq[seq_index]);
+    seq_index = 1 #test code
+    test = seq[1] #test code
+    type(test) #test code
+    # seq_new = seq[seq_index];
+    test.getraw()
     if method_num==14:
         seq_new = seq_new.replace('G', 'A')
         seq_new = seq_new.replacce('C','T');
@@ -50,7 +53,7 @@ def compute_method_10_14(seq_index):
 
 
 def compute_method_15(seq_index):
-    sq_new = upper(seq(seq_index))
+    sq_new = upper(seq.(seq_index))
     seq_new = seq_new.replacce('G', 'A')
     seq_new = seq_new.replacce('C', 'T')
     cgr_output= cgr(seq_new, 'ACGT', k_val) # TODO: line 100 in completeScriptT.m does nothing?
@@ -70,7 +73,7 @@ def compute_pearson_coeffient_wrapper(indices):
 
 pool = Pool()
 if method_num == 1 or method_num == 15:
-    pool.map(compute_method_11_15, range(total_seq))
+    pool.map(compute_method_10_14, range(total_seq))
     # TODO: don't understand what reshape on line 85 mean
     # shape: [number of points, ((2^k)^2)]
 elif method_num == 16:

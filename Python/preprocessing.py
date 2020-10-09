@@ -9,10 +9,12 @@ def preprocessing(directory):
 
 
     """
-    global data
+    #global data
     data = []
     cluster_names = os.listdir(directory)
-    cluster_sample_count={}
+    cluster_names
+    # dictionary with Accession ID as keys and cluster name as values
+    cluster_dict={}
     # count of the number of clusters as int
     number_of_clusters = len(cluster_names)
     # iterate through all the clusters' folders
@@ -36,8 +38,19 @@ def preprocessing(directory):
             # is done in case we want to work with multi-
             # seq fastas in the future or other BioPython
             # data types
-            Seq_record = SeqIO.index(file_path, "fasta")
-            cluster_samples.append(Seq_record)
-            data.append(Seq_record)
-        # data.append(cluster_samples)
-    return data, cluster_names, number_of_clusters, cluster_sample_count
+            Seq_dict = SeqIO.index(file_path, "fasta")
+            # trying to make a dict of accession id: cluster name to know which files belong to which clusters
+            accession_id = tuple(Seq_dict.keys())
+            cluster_dict.update({accession_id: cluster}) # working but can't access the keys
+        #    cluster_samples.append(Seq_record)
+            data.append(Seq_dict)
+
+    # print(cluster_dict.get('NC_027604.1,'))
+    total_seq = len(data)
+    total_seq
+    data
+    cluster_dict
+    cluster_sample_count
+    number_of_clusters
+    cluster_names
+    return data, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluster_dict
