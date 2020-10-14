@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 
 def cgr(chars, order, k):
     """computes CGR representation
@@ -12,7 +12,7 @@ def cgr(chars, order, k):
     x = 2**(k-1)
     y = 2**(k-1)
 
-    for i in len(chars):
+    for i in range(len(chars)):
         char = chars[i]
         x = np.fix(x/2)
         if char == order[2] or char == order[3]:
@@ -23,4 +23,4 @@ def cgr(chars, order, k):
 
         if (i+1) >= k:
             out[y+1, x+1] += 1
-    return out 
+    return out
