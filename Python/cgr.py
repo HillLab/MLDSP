@@ -8,19 +8,20 @@ def cgr(chars, order, k):
     order: chars to include in CGR
     k: value of k-mer
     """
-    out = np.zeros(2**k)
+    out = np.zeros((2**k,2**k))
     x = 2**(k-1)
     y = 2**(k-1)
 
     for i in range(len(chars)):
         char = chars[i]
-        x = np.fix(x/2)
+        x = int(np.fix(x/2))
         if char == order[2] or char == order[3]:
             x += 2**(k-1)
-        y = np.fix(y/2)
+        y = int(np.fix(y/2))
         if char == order[0] or char == order[3]:
             y += 2**(k-1)
 
         if (i+1) >= k:
-            out[y+1, x+1] += 1
+            
+            out[y][x] += 1
     return out

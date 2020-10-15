@@ -1,6 +1,6 @@
 from Bio import SeqIO
 import os
-directory = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
+#directory = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
 
 def preprocessing(directory):
     """Function to process fasta files in top-level directory, extract cluster

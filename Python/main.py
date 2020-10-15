@@ -35,26 +35,29 @@ keys = list(cluster_dict.keys())
 
 #seq_new = str(seqs[keys[1]].seq)
 def compute_method_10_14(seq_index):
-    seq_new = str(seqs[keys[seq_index]].seq);
+    seq_new = str(seqs[keys[seq_index]].seq)
     if method_num==14:
         seq_new = seq_new.replace('G', 'A')
         seq_new = seq_new.replace('C','T');
     cgr_output = cgr(seq_new,'ACGT',k_val) # shape:[2^k, 2^k]
     cgr_output_list.append(cgr_output)
-    fft_output = fft(cgr_output) # shape:[2^k, 2^k]
+    fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list.append(fft_output)
     abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
-compute_method_10_14(1)
+#compute_method_10_14(1)
+
+
 
 def compute_method_15(seq_index):
-    sq_new = upper(seq.(seq_index))
+    seq_new = str(seqs[keys[seq_index]].seq)
     seq_new = seq_new.replace('G', 'A')
     seq_new = seq_new.replace('C', 'T')
     cgr_output= cgr(seq_new, 'ACGT', k_val) # TODO: line 100 in completeScriptT.m does nothing?
     cgr_output_list.append(cgr_output)
-    fft_output = fft(cgr_output) # shape:[2^k, 2^k]
+    fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list.append(fft_output)
     abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
+#compute_method_15(1)
 
 
 def compute_pearson_coeffient(x, y):
@@ -66,15 +69,17 @@ def compute_pearson_coeffient_wrapper(indices):
 
 
 pool = Pool()
-if method_num == 1 or method_num == 15:
+if method_num == 0 or method_num == 14:
     pool.map(compute_method_10_14, range(total_seq))
     # TODO: don't understand what reshape on line 85 mean
     # shape: [number of points, ((2^k)^2)]
-elif method_num == 16:
+elif method_num == 15:
     cgr_len = 2**k_val
     pool.map(compute_method_16, range(total_seq))
 else:
     fft_output_list, abs_fft_output_list, cgr_output_list = oneDnumRepMethods(seq, method_num, med_len, total_seq) # TODO: oneDumRepMethods impl
+
+print(len(abs_fft_output_list))
 # compute pearson correlation coefficient using parallel programming
 distance_matrix = np.zeros(shape=(total_seq, total_seq))
 for i in range(total_seq):
