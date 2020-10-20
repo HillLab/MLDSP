@@ -10,7 +10,7 @@ from preprocessing import preprocessing
 from helpers import *
 from cgr import *
 # set up
-data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
+data_set = '/Users/wanxinli/Desktop/project/MLDSP-desktop/samples/Primates'
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
@@ -27,23 +27,24 @@ seqs, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluste
 
 print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
 
-cgr_output_list = []
-fft_output_list = []
-abs_fft_output_list = []
-
 keys = list(cluster_dict.keys())
+
+cgr_output_list = [[] for i in range(len(keys))]
+fft_output_list = [[] for i in range(len(keys))]
+abs_fft_output_list = [[] for i in range(len(keys))]
+
 
 #seq_new = str(seqs[keys[1]].seq)
 def compute_method_10_14(seq_index):
     seq_new = str(seqs[keys[seq_index]].seq)
     if method_num==14:
         seq_new = seq_new.replace('G', 'A')
-        seq_new = seq_new.replace('C','T');
+        seq_new = seq_new.replace('C','T')
     cgr_output = cgr(seq_new,'ACGT',k_val) # shape:[2^k, 2^k]
-    cgr_output_list.append(cgr_output)
+    cgr_output_list[seq_index] = cgr_output
     fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
-    fft_output_list.append(fft_output)
-    abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
+    fft_output_list[seq_index] = fft_output
+    abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
 #compute_method_10_14(1)
 
 
@@ -53,10 +54,10 @@ def compute_method_15(seq_index):
     seq_new = seq_new.replace('G', 'A')
     seq_new = seq_new.replace('C', 'T')
     cgr_output= cgr(seq_new, 'ACGT', k_val) # TODO: line 100 in completeScriptT.m does nothing?
-    cgr_output_list.append(cgr_output)
+    cgr_output_list[seq_index] = cgr_output
     fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
-    fft_output_list.append(fft_output)
-    abs_fft_output_list.append(np.abs(fft_output.flatten())) # flatted into 1d array
+    fft_output_list[seq_index] = fft_output
+    abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
 #compute_method_15(1)
 
 
