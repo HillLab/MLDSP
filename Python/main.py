@@ -65,7 +65,10 @@ def compute_method_15(seq_index):
 
 
 def compute_pearson_coeffient(x, y):
-    return pearsonr(x, y)
+    if x == y:
+        return 1
+    else:
+        return pearsonr(x, y)
 
 
 def compute_pearson_coeffient_wrapper(indices):
@@ -89,10 +92,7 @@ print(len(abs_fft_output_list))
 distance_matrix = np.zeros(shape=(total_seq, total_seq))
 distance_matrix
 for i in range(total_seq):
-    if i == j:
-        distance_matrix[i,j] = 1
-    else:
-        distance_matrix[i,j] = pool.map(compute_pearson_coeffient_wrapper, [(i, j) for j in range(total_seq)])
+    distance_matrix[i,j] = pool.map(compute_pearson_coeffient_wrapper, [(i, j) for j in range(total_seq)])
 
 
 # Multi-dimensional Scaling: TODO
