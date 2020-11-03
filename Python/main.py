@@ -10,7 +10,7 @@ from preprocessing import preprocessing
 from helpers import *
 from cgr import *
 # set up
-data_set = '/Users/dolteanu/local_documents/MLDSP/DataBase/Primates'
+data_set = '/Users/wanxinli/Desktop/project/MLDSP-Python/DataBase/Primates'
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
@@ -72,7 +72,7 @@ def compute_pearson_coeffient(x, y):
     if x.all() == y.all():
         return 1
     else:
-        return pearsonr(x, y)
+        return pearsonr(x, y)[0]
 
 
 def compute_pearson_coeffient_wrapper(indices):
