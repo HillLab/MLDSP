@@ -10,14 +10,14 @@ from preprocessing import preprocessing
 from helpers import *
 from cgr import *
 # set up
-data_set = '/Users/wanxinli/Desktop/project/MLDSP-desktop/samples/Primates'
+data_set = '/Users/dolteanu/local_documents/MLDSP/DataBase/Primates'
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
 max_seq_len = 0
 frags_per_seq = 1
 methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
-method_num=14; # change method number referring the variable above (between 0 and 15)
+method_num=0; # change method number referring the variable above (between 0 and 15)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
@@ -33,8 +33,8 @@ cgr_output_list = [[] for i in range(len(keys))]
 fft_output_list = [[] for i in range(len(keys))]
 abs_fft_output_list = [[] for i in range(len(keys))]
 
+test = open('dismat.txt', 'a')
 
-#seq_new = str(seqs[keys[1]].seq)
 def compute_method_10_14(seq_index):
     seq_new = str(seqs[keys[seq_index]].seq)
     if method_num==14:
@@ -45,7 +45,10 @@ def compute_method_10_14(seq_index):
     fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list[seq_index] = fft_output
     abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
-#compute_method_10_14(1)
+    for f in abs_fft_output_list:
+        print(f, file=test)
+
+
 
 
 
@@ -69,20 +72,22 @@ def compute_pearson_coeffient_wrapper(indices):
     compute_pearson_coeffient(*indices)
 
 
-pool = Pool()
+pool = Pool(4)
 if method_num == 0 or method_num == 14:
     pool.map(compute_method_10_14, range(total_seq))
+    test.close()
     # TODO: don't understand what reshape on line 85 mean
     # shape: [number of points, ((2^k)^2)]
 elif method_num == 15:
     cgr_len = 2**k_val
-    pool.map(compute_method_16, range(total_seq))
+    pool.map(compute_method_15, range(total_seq))
 else:
     fft_output_list, abs_fft_output_list, cgr_output_list = oneDnumRepMethods(seq, method_num, med_len, total_seq) # TODO: oneDumRepMethods impl
 
 print(len(abs_fft_output_list))
 # compute pearson correlation coefficient using parallel programming
 distance_matrix = np.zeros(shape=(total_seq, total_seq))
+distance_matrix
 for i in range(total_seq):
     if i == j:
         distance_matrix[i,j] = 1
