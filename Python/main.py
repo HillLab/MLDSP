@@ -26,16 +26,19 @@ seqs, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluste
 #max_len, min_len, mean_len, med_len = 0,0,0,0 # TODO: lengthCalc impl
 
 print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
-
+# variable holding all the keys (accession numbers) for corresponding clusters
 keys = list(cluster_dict.keys())
+
 
 cgr_output_list = [[] for i in range(len(keys))]
 fft_output_list = [[] for i in range(len(keys))]
 abs_fft_output_list = [[] for i in range(len(keys))]
 
-test = open('dismat.txt', 'a')
 
 def compute_method_10_14(seq_index):
+    # seqs is the sequence database, it is being called by accession number
+    # (keys) which is being iterated over all seq_index,
+    # (count of all sequences in uploaded dataset) .seq calls the string
     seq_new = str(seqs[keys[seq_index]].seq)
     if method_num==14:
         seq_new = seq_new.replace('G', 'A')
@@ -45,11 +48,11 @@ def compute_method_10_14(seq_index):
     fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list[seq_index] = fft_output
     abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
-    for f in abs_fft_output_list:
-        print(f, file=test)
+    return abs_fft_output_list
 
-
-
+# Bypass for broken pool.map line 84
+for f in range(total_seq):
+    compute_method_10_14(f)
 
 
 def compute_method_15(seq_index):
@@ -61,24 +64,26 @@ def compute_method_15(seq_index):
     fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
     fft_output_list[seq_index] = fft_output
     abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
-#compute_method_15(1)
+    return abs_fft_output_list
+
 
 
 def compute_pearson_coeffient(x, y):
-    if x == y:
+    if x.all() == y.all():
         return 1
     else:
         return pearsonr(x, y)
 
 
 def compute_pearson_coeffient_wrapper(indices):
-    compute_pearson_coeffient(*indices)
-
+    x = abs_fft_output_list[indices[0]]
+    y = abs_fft_output_list[indices[1]]
+    compute_pearson_coeffient(x, y)
 
 pool = Pool(4)
 if method_num == 0 or method_num == 14:
     pool.map(compute_method_10_14, range(total_seq))
-    test.close()
+    #test.close()
     # TODO: don't understand what reshape on line 85 mean
     # shape: [number of points, ((2^k)^2)]
 elif method_num == 15:
@@ -87,12 +92,12 @@ elif method_num == 15:
 else:
     fft_output_list, abs_fft_output_list, cgr_output_list = oneDnumRepMethods(seq, method_num, med_len, total_seq) # TODO: oneDumRepMethods impl
 
-print(len(abs_fft_output_list))
 # compute pearson correlation coefficient using parallel programming
 distance_matrix = np.zeros(shape=(total_seq, total_seq))
-distance_matrix
 for i in range(total_seq):
     distance_matrix[i,j] = pool.map(compute_pearson_coeffient_wrapper, [(i, j) for j in range(total_seq)])
+
+
 
 
 # Multi-dimensional Scaling: TODO
