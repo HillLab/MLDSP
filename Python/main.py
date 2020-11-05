@@ -28,7 +28,7 @@ seqs, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluste
 print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
 # variable holding all the keys (accession numbers) for corresponding clusters
 keys = list(cluster_dict.keys())
-
+abs_fft_output_list=[]
 ## not needed for pool.map implementation
 # cgr_output_list = [[] for i in range(len(keys))]
 # fft_output_list = [[] for i in range(len(keys))]
@@ -70,19 +70,17 @@ def compute_method_15(seq_index):
 
 
 def compute_pearson_coeffient(x, y):
-    return pearsonr(x, y)[0]
+    print (pearsonr(x, y)[0])
 
 
 def compute_pearson_coeffient_wrapper(indices):
     x = abs_fft_output_list[indices[0]]
     y = abs_fft_output_list[indices[1]]
-    print(compute_pearson_coeffient(x, y))
     return compute_pearson_coeffient(x, y)
 
 
 #This needs to be modified for compute canada parallel processing
 pool = Pool(4)
-
 if method_num == 0 or method_num == 14:
     abs_fft_output_list = pool.map(compute_method_10_14, range(total_seq))
 elif method_num == 15:
@@ -90,14 +88,11 @@ elif method_num == 15:
 else:
     fft_output_list, abs_fft_output_list, cgr_output_list = oneDnumRepMethods(seq, method_num, med_len, total_seq) # TODO: oneDumRepMethods impl
 
-
-
 # compute pearson correlation coefficient using parallel programming
 distance_matrix = np.zeros(shape=(total_seq, total_seq))
 distance_matrix = pool.map(compute_pearson_coeffient_wrapper, ((i, j) for i in range(total_seq) for j in range(total_seq)))
 distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
-np.savetxt('distmat.txt', distance_matrix)
-
+# np.savetxt('distmat.txt', distance_matrix)
 
 # Multi-dimensional Scaling: TODO
 # 3D  plot: TODO
