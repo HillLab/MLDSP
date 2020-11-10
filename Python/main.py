@@ -10,14 +10,14 @@ from preprocessing import preprocessing
 from helpers import *
 from cgr import *
 # set up
-data_set = '/Users/wanxinli/Desktop/project/MLDSP-Python/DataBase/Primates'
+data_set = '/Users/dolteanu/local_documents/MLDSP/DataBase/Primates'
 test_set = 'NoData'
 seq_to_test=0
 min_seq_len = 0
 max_seq_len = 0
 frags_per_seq = 1
 methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
-method_num=0; # change method number referring the variable above (between 0 and 15)
+method_num=15; # change method number referring the variable above (between 0 and 15)
 k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
 
 
@@ -28,11 +28,11 @@ seqs, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluste
 print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
 # variable holding all the keys (accession numbers) for corresponding clusters
 keys = list(cluster_dict.keys())
-
-
-cgr_output_list = [[] for i in range(len(keys))]
-fft_output_list = [[] for i in range(len(keys))]
-abs_fft_output_list = [[] for i in range(len(keys))]
+abs_fft_output_list=[]
+## not needed for pool.map implementation
+# cgr_output_list = [[] for i in range(len(keys))]
+# fft_output_list = [[] for i in range(len(keys))]
+#abs_fft_output_list = [[] for i in range(len(keys))]
 
 
 def compute_method_10_14(seq_index):
@@ -43,62 +43,56 @@ def compute_method_10_14(seq_index):
     if method_num==14:
         seq_new = seq_new.replace('G', 'A')
         seq_new = seq_new.replace('C','T')
-    cgr_output = cgr(seq_new,'ACGT',k_val) # shape:[2^k, 2^k]
-    cgr_output_list[seq_index] = cgr_output
-    fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
-    fft_output_list[seq_index] = fft_output
-    abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
-    return abs_fft_output_list
-
-# Bypass for broken pool.map line 84
-for f in range(total_seq):
-    compute_method_10_14(f)
+    cgr_output = cgr(seq_new,'ACGT',k_val)  # shape:[2^k, 2^k]
+    # cgr_output_list[seq_index] = cgr_output
+    fft_output = fft.fft(cgr_output)  # shape:[2^k, 2^k]
+    # fft_output_list[seq_index] = fft_output
+    #abs_fft_output_list[seq_index] = np.abs(fft_output.flatten())
+    return np.abs(fft_output.flatten())  # flatted into 1d array & take absolute value of magnitude spectra
 
 
+## Bypass for broken pool.map line 84
+# for f in range(total_seq):
+#     compute_method_10_14(f)
+# needs to be fixed to compute_method_10_14 spec for pool.map & take only last row
 def compute_method_15(seq_index):
     seq_new = str(seqs[keys[seq_index]].seq)
+    # creates PuPyCGR
     seq_new = seq_new.replace('G', 'A')
     seq_new = seq_new.replace('C', 'T')
-    cgr_output= cgr(seq_new, 'ACGT', k_val) # TODO: line 100 in completeScriptT.m does nothing?
-    cgr_output_list[seq_index] = cgr_output
-    fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k]
-    fft_output_list[seq_index] = fft_output
-    abs_fft_output_list[seq_index] = np.abs(fft_output.flatten()) # flatted into 1d array
-    return abs_fft_output_list
-
+    cgr_output= cgr(seq_new, 'ACGT', k_val)
+    # takes only the last (bottom) row of cgr to make 1DPuPyCGR
+    cgr_output = cgr_output[-1, :]
+    #cgr_output_list[seq_index] = cgr_output
+    fft_output = fft.fft(cgr_output) # shape:[2^k, 2^k] # this should be np.transpose(fft.fft(np.transpose(cgr_output)))
+    #fft_output_list[seq_index] = fft_output
+    return(np.abs(fft_output.flatten())) # flatted into 1d array
 
 
 def compute_pearson_coeffient(x, y):
-    if x.all() == y.all():
-        return 1
-    else:
-        return pearsonr(x, y)[0]
+    print (pearsonr(x, y)[0])
 
 
 def compute_pearson_coeffient_wrapper(indices):
     x = abs_fft_output_list[indices[0]]
     y = abs_fft_output_list[indices[1]]
-    compute_pearson_coeffient(x, y)
+    return compute_pearson_coeffient(x, y)
 
+
+#This needs to be modified for compute canada parallel processing
 pool = Pool(4)
 if method_num == 0 or method_num == 14:
-    pool.map(compute_method_10_14, range(total_seq))
-    #test.close()
-    # TODO: don't understand what reshape on line 85 mean
-    # shape: [number of points, ((2^k)^2)]
+    abs_fft_output_list = pool.map(compute_method_10_14, range(total_seq))
 elif method_num == 15:
-    cgr_len = 2**k_val
-    pool.map(compute_method_15, range(total_seq))
+    abs_fft_output_list = pool.map(compute_method_15, range(total_seq))
 else:
     fft_output_list, abs_fft_output_list, cgr_output_list = oneDnumRepMethods(seq, method_num, med_len, total_seq) # TODO: oneDumRepMethods impl
 
 # compute pearson correlation coefficient using parallel programming
 distance_matrix = np.zeros(shape=(total_seq, total_seq))
-for i in range(total_seq):
-    distance_matrix[i,j] = pool.map(compute_pearson_coeffient_wrapper, [(i, j) for j in range(total_seq)])
-
-
-
+distance_matrix = pool.map(compute_pearson_coeffient_wrapper, ((i, j) for i in range(total_seq) for j in range(total_seq)))
+distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
+# np.savetxt('distmat.txt', distance_matrix)
 
 # Multi-dimensional Scaling: TODO
 # 3D  plot: TODO
