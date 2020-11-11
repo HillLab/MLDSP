@@ -100,6 +100,9 @@ distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
 # np.savetxt('distmat.txt', distance_matrix)
 
 # Multi-dimensional Scaling: TODO
+
+scaled_data = mds('distmat.txt')
+
 # 3D  plot: TODO
 # Phylogenetic Tree: TODO # not tested
 
