@@ -9,6 +9,11 @@ from num_mapping import *
 from preprocessing import preprocessing
 from helpers import *
 from cgr import *
+
+## plotting 
+from mpl_toolkits import mplot3d
+import matplotlib.pyplot as plt
+
 # set up
 data_set = '/Users/dolteanu/local_documents/MLDSP/DataBase/Primates'
 test_set = 'NoData'
@@ -95,6 +100,9 @@ distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
 # np.savetxt('distmat.txt', distance_matrix)
 
 # Multi-dimensional Scaling: TODO
+
+scaled_data = mds('distmat.txt')
+
 # 3D  plot: TODO
 # Phylogenetic Tree: TODO # not tested
 
