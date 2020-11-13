@@ -3,7 +3,6 @@ import numpy as np
 
 def length_calc(seq_list):
     """calculates length stats
-
     Keyword arguments:
     seq_list: a list of squence
     """
@@ -20,13 +19,13 @@ def inter_cluster_dist(clsuter,unique_clusters,distance_matrix, cluster_num):
     c_ind = np.zeros(cluster_num)
     for h in range(cluster_num):
         c_ind[h] = (clsuter == unique_clusters[h])
-    
+
     for i in range(cluster_num):
         for j in range(i+1, cluster_num):
-            if i==j:         
-                continue           
+            if i==j:
+                continue
             else:
                 dT = distance_matrix[c_ind[i],c_ind[j]]
-                avg_dist[i,j] = np.mean(np.transpose(dT), 1)  
+                avg_dist[i,j] = np.mean(np.transpose(dT), 1)
                 avg_dist[j,i] = avg_dist[i,j]
     return avg_dist

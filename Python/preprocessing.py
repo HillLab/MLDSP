@@ -1,49 +1,70 @@
 from Bio import SeqIO
 import os
-#directory = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates'
+data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates/'
 
-def preprocessing(directory):
-    """Function to process fasta files in top-level directory, extract cluster
-    info from dir names, and index (without ram loading) sequence data from
-    fasta files. Output is 1. 'seqs' a list of SeqIO dictionary like objects
-    each of which gives 1 SeqRecord object per sequence from that fasta file
-    containing the seq string & associated info. 2. 'cluster_dict' a
-    dictionary of accession ids as keys & cluster names as values
+def preprocessing(data_set):
+    """Preprocessing of fasta sequences using BioPython into a database of
+    SeqRecord objects each representing a unique sequence, can handle multiple
+    sequence fastas.
+
+    seqs: main sequence database, dictionary-like object, no info on clusters
+    cluster_names: list of all cluster names from sub-directory names.
+
+    number_of_clusters: integer of the total count of clusters.
+
+    cluster_sample_info: Dictionary with keys=cluster_names and values =
+    a tuple consisting of: (number of samples in cluster,
+        a list of accession ids corresponding to sequences of that cluster).
+
+    total_seq: integer of the total sequence count in dataset.
+
+    cluster_dict: depracated with cluster_sample_info, will be removed
     """
     # list of SeqIO dictionary like objects
     seqs = []
-    cluster_names = os.listdir(directory)
+    cluster_names = os.listdir(data_set)
     # dictionary with Accession ID as keys and cluster name as values
     cluster_dict = {}
     # number of samples in each cluster
-    cluster_sample_count = {}
+    cluster_samples_info = {}
     # count of the number of clusters as int
     number_of_clusters = len(cluster_names)
+    type(number_of_clusters)
     # iterate through all the clusters' folders
     paths = []
+    # Iterate over each cluster (top level directories)
     for cluster in cluster_names:
-        files = os.listdir(os.path.join(directory, cluster))
-        files = [os.path.join(directory, cluster, f) for f in files]
+        accession_cluster_list = []
+        files = os.listdir(os.path.join(data_set, cluster))
+        files = [os.path.join(data_set, cluster, f) for f in files]
         paths.extend(files)
         # get path for cluster as str
-        cluster_path = os.path.join(directory, cluster)
+        cluster_path = os.path.join(data_set, cluster)
         # get names of files in cluster as list of str
         file_name = os.listdir(cluster_path)
+        # Iterate over each file in the cluster
         for file in file_name:
             # get path for each file in cluster as str
             file_path = os.path.join(cluster_path, file)
-            # Add the fasta file's contents to a dict of
-            # sequence accession : BioPython SeqRecord ()
-            # without storing the dict in memory, this
-            # is done in case we want to work with multi-
-            # seq fastas in the future or other BioPython
-            # data types
+            # Required to use SeqIO.index to generate dictionaries to sort
+            # accession ids by cluster, and get cluster sizes
+            # SeqIO.index doesnt take file handle to index multiple seqs to a
+            # single dict
             Seq_dict = SeqIO.index(file_path, "fasta")
-            # dictionary to identify which sequences belong to which clusters
+            # Must iterate over keys to get dictionary to ensure
             for accession_id in Seq_dict.keys():
                 cluster_dict.update({accession_id: cluster})
-        cluster_sample_count.update({cluster: len(cluster_dict)})
+        # Not required, can get this from cluster_dict        accession_cluster_list.append(accession_id)
+        # Dictionary for each cluster's sample count & list of accession ids
+        # (for querying seqs)
+        cluster_samples_info.update(
+            {cluster: (len(accession_cluster_list), accession_cluster_list)})
+    # Actual creation of sequences database (BioSQL) containing SeqRecords,
+    # SeqIO.index_db doesnt allow the addition of info to the database,
+    # otherwise we can bypass the use of SeqIO.index().
     seqs = SeqIO.index_db('Sequence_database.idx', paths, "fasta")
+    print("%i sequences indexed in total" % len(seqs))
     # Add the number of files in cluster as dict of cluster name: file count
-    total_seq = len(cluster_dict)
-    return seqs, cluster_names, number_of_clusters, cluster_sample_count, total_seq, cluster_dict
+    total_seq = len(seqs)
+    # cluster_dict no longer used can be removed
+    return seqs, cluster_names, number_of_clusters, cluster_samples_info, total_seq, cluster_dict
