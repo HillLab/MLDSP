@@ -144,7 +144,7 @@ distance_matrix = np.zeros(shape=(total_seq, total_seq))
 distance_matrix = pool.starmap(partial(compute_pearson_coeffient_wrapper, abs_fft_output_list = abs_fft_output_list), ((i, j) for i in range(total_seq) for j in range(total_seq)))
 distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
 
-np.savetxt('distm.txt', distance_matrix)
+np.savetxt('distmat.txt', distance_matrix)
 
 
 # Multi-dimensional Scaling: TODO
