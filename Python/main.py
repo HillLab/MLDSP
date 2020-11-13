@@ -14,6 +14,9 @@ import pywt
 import os
 from statistics import median, mean
 import one_dimensional_num_mapping
+## plotting
+from mpl_toolkits import mplot3d
+import matplotlib.pyplot as plt
 # set up
 if os.path.exists("Sequence_database.idx"):
   os.remove("Sequence_database.idx")
@@ -145,6 +148,9 @@ np.savetxt('distm.txt', distance_matrix)
 
 
 # Multi-dimensional Scaling: TODO
+
+scaled_data = mds('distmat.txt')
+
 # 3D  plot: TODO
 
 # Classification
