@@ -1,6 +1,7 @@
 import numpy as np
 from multiprocessing import Pool
 from scipy import fft
+import pywt
 
 def num_mapping_AT_CG(sq):
     """computes paired numeric representation
@@ -216,12 +217,13 @@ def one_dim_num_rep_mapping(seq, method_num, med_len, total_seq):
     ns_list = np.zeros(total_seq)
     fft_output_list = np.zeros(total_seq)
     abs_fft_output_list = np.zeros(total_seq)
+    global shorten_seq
     def shorten_seq(seq_index):
         ns = seq[seq_index].upper()
         ind = med_len-len(ns)
         if ind < 0:
             seq[seq_index] = ns[:med_len+1]
-    pool.map(shorten_seq, range(range(total_seq)))
+    pool.map(shorten_seq, range(total_seq))
 
     method_num_to_function = {1: num_mapping_PP, 2: num_mapping_Int, 3:num_mapping_IntN, 4: num_mapping_Real, 5:num_mapping_Real, 6:num_mapping_Codons, 7:num_mapping_Atomic, 8:num_mapping_EIIP, 9: num_mapping_AT_CG, 10: num_mapping_justA, 11: num_mapping_justC, 12: num_mapping_justG, 13: num_mapping_justT}
     def call_methods(seq_index):
@@ -233,9 +235,9 @@ def one_dim_num_rep_mapping(seq, method_num, med_len, total_seq):
         ind = med_len - len(ns)
 
         if ind > 0:
-            ns_list[seq_index] = np.pad(ns, ind, 'symmetric')[ind:] #TODO: anitisymmetric in Matlab
+            ns_list[seq_index] = pywt.pad(ns, ind, 'antisymmetric')[ind:] #TODO: anitisymmetric in Matlab
         else:
             ns_list[seq_index] = ns
-        fft_output_list[seq_index] = fft(ns_list[seq_index])
+        fft_output_list[seq_index] = fft.fft(ns_list[seq_index])
         abs_fft_output_list[seq_index] = abs(fft_output_list[seq_index])
     pool.map(extend_seq, range(total_seq))
