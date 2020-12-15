@@ -1,100 +1,96 @@
+import sys
 from scipy import fft
 import numpy as np
 from multiprocessing import Pool
 from scipy.stats import pearsonr
 import Bio
-from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
+from Bio.Phylo.TreeConstruction import *
+from functools import partial
+import pywt
+# import os
+from statistics import median, mean
+from one_dimensional_num_mapping import *
+from mds import mds
+# plotting
+from mpl_toolkits import mplot3d
+import matplotlib.pyplot as plt
 from classification import classify_dismat
-from num_mapping import *
 from preprocessing import preprocessing
 from helpers import *
 from cgr import *
-from functools import partial
-import pywt
-import os
-from statistics import median, mean
-import one_dimensional_num_mapping
-## plotting
-from mpl_toolkits import mplot3d
-import matplotlib.pyplot as plt
 # set up
-if os.path.exists("Sequence_database.idx"):
-  os.remove("Sequence_database.idx")
+# if os.path.exists("Sequence_database.idx"):
+#     os.remove("Sequence_database.idx")
 data_set = '../DataBase/Primates'
 test_set = 'NoData'
-seq_to_test=0
+seq_to_test = 0
 min_seq_len = 0
 max_seq_len = 0
 frags_per_seq = 1
-methods_list = ['CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR']
-method_num=0; # change method number referring the variable above (between 0 and 15)
-k_val = 6; # used only for CGR-based representations(if methodNum=1,15,16)
-# abs_fft_output_list=[]
+methods_list = {0: cgr, 1: num_mapping_PP, 2: num_mapping_Int, 3: num_mapping_IntN, 4: num_mapping_Real, 5: num_mapping_Doublet, 6: num_mapping_Codons, 7: num_mapping_Atomic,
+                8: num_mapping_EIIP, 9: num_mapping_AT_CG, 10: num_mapping_justA, 11: num_mapping_justC, 12: num_mapping_justG, 13: num_mapping_justT, 14: 'PuPyCGR', 15: '1DPuPyCGR'}
+# change method number referring the variable above (between 0 and 15)
+method_num = 0
+method = methods_list.get(method_num)
+k_val = 3  # used only for CGR-based representations(if methodNum=1,15,16)
 
-seqs, cluster_names, number_of_clusters, cluster_samples_info, total_seq, cluster_dict = preprocessing(data_set)
+seq_dict, cluster_names, number_of_clusters, total_seq, cluster_dict = preprocessing(data_set)
 
-print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
 # variable holding all the keys (accession numbers) for corresponding clusters
-
 keys = list(cluster_dict.keys())
 values = list(cluster_dict.values())
 # Could be parallelized in the future
-seqs_length = [len(seqs[keys[i]].seq) for i in range(total_seq)]
+seqs_length = [len(seq_dict[keys[i]].seq) for i in range(total_seq)]
 med_len = median(seqs_length)
+labels = [cluster_dict[x] for x in seq_dict.keys()]
+fft_output_list = []
+abs_fft_output_list = []
+cgr_output_list = []
 
-labels = [cluster_dict[x] for x in seqs.keys()]
-
-## not needed for pool.map implementation
-cgr_output_list = [[] for i in range(len(keys))]
-fft_output_list = [[] for i in range(len(keys))]
-abs_fft_output_list = [[] for i in range(len(keys))]
-
-
-
-def compute_method_10_14(seq_index):
+def compute_cgr_PuPyCGR(seq_index):
     # seqs is the sequence database, it is being called by accession number
     # (keys) which is being iterated over all seq_index,
     # (count of all sequences in uploaded dataset) .seq calls the string
-    seq_new = str(seqs[keys[seq_index]].seq)
-    if method_num==14:
-        type(seq_new)
+    seq_new = str(seq_dict[keys[seq_index]].seq)
+    if method_num == 14:
         seq_new = seq_new.replace('G', 'A')
-        seq_new = seq_new.replace('C','T')
-    cgr_output = cgr(seq_new,'ACGT',k_val)  # shape:[2^k, 2^k]
-    cgr_output_list[seq_index] = cgr_output
-    fft_output = fft.fft(cgr_output)  # shape:[2^k, 2^k]
-    fft_output_list[seq_index] = fft_output
-    #abs_fft_output_list[seq_index] = np.abs(fft_output.flatten())
-    return np.abs(fft_output.flatten())  # flatted into 1d array & take absolute value of magnitude spectra
+        seq_new = seq_new.replace('C', 'T')
+    cgr_output = cgr(seq_new, 'ACGT', k_val)  # shape:[2^k, 2^k]
+    # shape:[2^k, 2^k] # may not be appropriate to take by column
+    fft_output = fft.fft(cgr_output, axis=1)
+    abs_fft_output = np.abs(fft_output.flatten())
+    return abs_fft_output, fft_output, cgr_output  # flatted into 1d array
 
 
-def compute_method_15(seq_index):
-    seq_new = str(seqs[keys[seq_index]].seq)
+def compute_1DPuPyCGR(seq_index):
+    seq_new = str(seq_dict[keys[seq_index]].seq)
     # creates PuPyCGR
     seq_new = seq_new.replace('G', 'A')
     seq_new = seq_new.replace('C', 'T')
-    cgr_output= cgr(seq_new, 'ACGT', k_val)
+    cgr_raw = cgr(seq_new, 'ACGT', k_val)
     # takes only the last (bottom) row but all columns of cgr to make 1DPuPyCGR
-    cgr_output = cgr_output[-1, :]
-    cgr_output_list[seq_index] = cgr_output
-    fft_output = fft.fft(cgr_output)  # shape:[2^k, 2^k] # this should be np.transpose(fft.fft(np.transpose(cgr_output)))
-    fft_output_list[seq_index] = fft_output
-    return(np.abs(fft_output.flatten()))  # flatted into 1d array
+    cgr_output = cgr_raw[-1, :]
+    # shape:[1, 2^k] # may not be appropriate to take by column
+    fft_output = fft.fft(cgr_output)
+    abs_fft_output = np.abs(fft_output.flatten())
+    return abs_fft_output, fft_output, cgr_output  # flatted into 1d array
+
 
 def one_dimensional_num_mapping_wrapper(seq_index):
     # normalize sequences to median sequence length of cluster
-    seq_new = str(seqs[keys[seq_index]].seq)
+    seq_new = str(seq_dict[keys[seq_index]].seq)
     len(seq_new)
     if len(seq_new) >= med_len:
         seq_new = seq_new[1:round(med_len)]
-    if method_num == 1:
-        num_seq = one_dimensional_num_mapping.numMappingPP(seq_new)
+    num_seq = method(seq_new)
     if len(num_seq) < med_len:
         pad_width = int(med_len - len(num_seq))
-        num_seq = pywt.pad(num_seq,pad_width,'antisymmetric')[pad_width:]
+        num_seq = pywt.pad(num_seq, pad_width, 'antisymmetric')[pad_width:]
     fft_output = fft.fft(num_seq)
-    fft_output_list[seq_index] = fft_output
-    return(np.abs(fft_output.flatten()))
+    abs_fft_output = np.abs(fft_output.flatten())
+    return abs_fft_output, fft_output
+
+
 # this can be replaced by Biopython
 def compute_pearson_coeffient(x, y):
     r = pearsonr(x, y)[0]
@@ -102,7 +98,7 @@ def compute_pearson_coeffient(x, y):
     return normalized_r
 
 
-def compute_pearson_coeffient_wrapper(i,j,abs_fft_output_list):
+def compute_pearson_coeffient_wrapper(i, j, abs_fft_output_list):
     # print(abs_fft_output_list)
     # x = abs_fft_output_list[i]
     # y = abs_fft_output_list[indices[1]]
@@ -111,56 +107,75 @@ def compute_pearson_coeffient_wrapper(i,j,abs_fft_output_list):
     return compute_pearson_coeffient(abs_fft_output_list[i], abs_fft_output_list[j])
 
 
-# def phylogenetic_tree(distance_matrix):
-#     constructor = DistanceTreeConstructor()
-#     nj_tree = constructor.nj(distance_matrix)
-#     # newick may not be need to be quoted
-#     neighbour_joining_tree = nj_tree.format('newick')
-#     upgma = constructor.upgma(distance_matrix)
-#     upgma_tree = upgma.format('newick')
-#     # can add code here for visualization with matplotlib
+def phylogenetic_tree(distance_matrix):
+    names = keys
+    matrix = triangle_matrix
+    distance_matrix = DistanceMatrix(names, matrix)
+    constructor = DistanceTreeConstructor()
+    nj_tree = constructor.nj(distance_matrix)
+    # newick may not be need to be quoted
+    neighbour_joining_tree = nj_tree.format('newick')
+    upgma = constructor.upgma(distance_matrix)
+    upgma_tree = upgma.format('newick')
+    print(upgma_tree, file=tree_print)
+    # can add code here for visualization with matplotlib
 
 
 # This needs to be modified for compute canada parallel processing
+if __name__ == '__main__':
+    pool = Pool()
+    print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
+    if method_num == 0 or method_num == 14:
+        for abs_fft_output, fft_output, cgr_output in pool.map(compute_cgr_PuPyCGR, range(total_seq)):
+            abs_fft_output_list.append(abs_fft_output)
+            fft_output_list.append(fft_output)
+            cgr_output_list.append(cgr_output)
+    elif method_num == 15:
+        for abs_fft_output, fft_output, cgr_output in pool.map(compute_1DPuPyCGR, range(total_seq)):
+            abs_fft_output_list.append(abs_fft_output)
+            fft_output_list.append(fft_output)
+            cgr_output_list.append(cgr_output)
+    else:
+        for abs_fft_output, fft_output in pool.map(one_dimensional_num_mapping_wrapper, range(total_seq)):
+            abs_fft_output_list.append(abs_fft_output)
+            fft_output_list.append(fft_output)
+       
+    print('Building distance matrix')
+    distance_matrix = np.zeros(shape=(total_seq, total_seq))
+    distance_matrix = pool.starmap(partial(compute_pearson_coeffient_wrapper, abs_fft_output_list=abs_fft_output_list), ((
+        i, j) for i in range(total_seq) for j in range(total_seq)))
+    distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
+    # change filename to unique ID
+    np.savetxt('distmat.txt', distance_matrix)
+
+    print('Building Phylogenetic Trees')
+    matrix_list = distance_matrix.tolist()
+    triangle_matrix = []
+    # loop to create triangle matrix as nested list
+    for i in range(total_seq):
+        row = []
+        row = (matrix_list[i][0:i+1])
+        triangle_matrix.append(row)
+    # change filename to unique ID
+    tree_print = open('upgma.tree', 'a')
+    phylogenetic_tree(triangle_matrix)
+    tree_print.close()
 
 
-pool = Pool(6)
-if method_num == 0 or method_num == 14:
-    abs_fft_output_list = pool.map(compute_method_10_14, range(total_seq))
-elif method_num == 15:
-    abs_fft_output_list = pool.map(compute_method_15, range(total_seq))
-else:
-    abs_fft_output_list = pool.map(one_dimensional_num_mapping_wrapper, range(total_seq))
+    # Multi-dimensional Scaling: TODO
 
+    #scaled_data = mds('distmat.txt')
 
-    # seq_list = []
-    # for seq_index in range(total_seq):
-    #     seq_list.append(str(seqs[keys[seq_index]].seq))
-    # fft_output_list, abs_fft_output_list, cgr_output_list = one_dim_num_rep_mapping(seq_list, method_num, med_len, total_seq)
+    # 3D  plot: TODO
 
+    # Classification
 
-
-distance_matrix = np.zeros(shape=(total_seq, total_seq))
-distance_matrix = pool.starmap(partial(compute_pearson_coeffient_wrapper, abs_fft_output_list = abs_fft_output_list), ((i, j) for i in range(total_seq) for j in range(total_seq)))
-distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
-
-np.savetxt('distmat.txt', distance_matrix)
-
-
-# Multi-dimensional Scaling: TODO
-
-scaled_data = mds('distmat.txt')
-
-# 3D  plot: TODO
-
-# Classification
-
-print('Performing classification .... \n');
-folds=10
-if (total_seq<folds):
-    folds = totalSeq
-accuracy = classify_dismat(distance_matrix,labels, folds, total_seq);
-# accuracy,avg_accuracy, clNames, cMat
-# accuracies = [accuracy, avg_accuracy];
-print(accuracy)
-print('**** Processing completed ****\n');
+    print('Performing classification .... \n')
+    folds = 10
+    if (total_seq < folds):
+        folds = total_seq
+    accuracy = classify_dismat(distance_matrix, labels, folds, total_seq)
+    # accuracy,avg_accuracy, clNames, cMat
+    # accuracies = [accuracy, avg_accuracy];
+    print('Classification accuracy 10 fold X 5 classifiers\n', accuracy)
+    print('**** Processing completed ****\n')

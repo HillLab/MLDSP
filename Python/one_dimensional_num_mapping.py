@@ -1,6 +1,6 @@
 import numpy as np
 
-def numMappingAT_CG(sq):
+def num_mapping_AT_CG(sq):
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -16,8 +16,8 @@ def numMappingAT_CG(sq):
         else:
             pass
     return numSeq
-        
-def numMappingJustA(sq):
+
+def num_mapping_justA(sq):
      a = "A"
      length = len(sq)
      numSeq = np.zeros(length)
@@ -28,8 +28,8 @@ def numMappingJustA(sq):
          else:
              pass
      return numSeq
-         
-def numMappingJustC(sq):
+
+def num_mapping_justC(sq):
      c = "C"
      length = len(sq)
      numSeq = np.zeros(length)
@@ -40,8 +40,8 @@ def numMappingJustC(sq):
          else:
              pass
      return numSeq
-         
-def numMappingJustG(sq):
+
+def num_mapping_justG(sq):
      g = "G"
      length = len(sq)
      numSeq = np.zeros(length)
@@ -53,7 +53,7 @@ def numMappingJustG(sq):
              pass
      return numSeq
 
-def numMappingJustT(sq):
+def num_mapping_justT(sq):
      t_ = "T"
      length = len(sq)
      numSeq = np.zeros(length)
@@ -65,8 +65,8 @@ def numMappingJustT(sq):
              pass
      return numSeq
 
-           
-def numMappingReal(sq):
+
+def num_mapping_Real(sq):
      length = len(sq)
      numSeq = np.zeros(length)
      for k in range(0, length):
@@ -78,13 +78,13 @@ def numMappingReal(sq):
          elif t.upper() == "G":
              numSeq[k] = -0.5
          elif t.upper() == "T":
-             numSeq[k] = 1.5           
+             numSeq[k] = 1.5
          else:
              pass
      return numSeq
 
 
-def numMappingPP(sq):
+def num_mapping_PP(sq):
      length = len(sq)
      numSeq = np.zeros(length)
      for k in range(0, length):
@@ -96,12 +96,12 @@ def numMappingPP(sq):
          elif t.upper() == "G":
              numSeq[k] = -1
          elif t.upper() == "T":
-             numSeq[k] = 1          
+             numSeq[k] = 1
          else:
              pass
      return numSeq
-            
-def numMappingIntN(sq): 
+
+def num_mapping_IntN(sq):
 #needs validation of output
      dob = ['T', 'C', 'A', 'G']
      length = len(sq)
@@ -111,19 +111,19 @@ def numMappingIntN(sq):
          tp = dob.index(t) + 1
          numSeq[k] = tp
      return numSeq
-    
-def numMappingInt(sq): 
+
+def num_mapping_Int(sq):
 #needs validation of output
      dob = ['T', 'C', 'A', 'G']
      length = len(sq)
      numSeq = np.zeros(length)
      for k in range(0, length):
          t = sq[k]
-         tp = dob.index(t) 
+         tp = dob.index(t)
          numSeq[k] = tp
      return numSeq
-    
-def numMappingEIIP(sq):
+
+def num_mapping_EIIP(sq):
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -135,12 +135,12 @@ def numMappingEIIP(sq):
          elif t.upper() == "G":
              numSeq[k] = 0.0806
          elif t.upper() == "T":
-             numSeq[k] = 0.1335        
+             numSeq[k] = 0.1335
          else:
              pass
     return numSeq
-            
-def numMappingAtomic(sq):
+
+def num_mapping_Atomic(sq):
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -152,12 +152,12 @@ def numMappingAtomic(sq):
          elif t.upper() == "G":
              numSeq[k] = 78
          elif t.upper() == "T":
-             numSeq[k] = 66    
+             numSeq[k] = 66
          else:
              pass
     return numSeq
-         
-def numMappingCodons(sq):
+
+def num_mapping_Codons(sq):
 #needs validation of output
     length = len(sq) -1
     numSeq = np.zeros(length)
@@ -173,7 +173,7 @@ def numMappingCodons(sq):
             t = sq[k:k+2] + sq[0]
         else:
             t = sq[k] + sq[0:2]
-        
+
         tp = codons.index(t)
         numSeq[k] = tp
     return numSeq
@@ -190,7 +190,7 @@ def num_mapping_Doublet(sq, alpha=0):
                 t = sq[k:k+2]
             else:
                 t = sq[k] + sq[0]
-            tp = doublet.index(t) 
+            tp = doublet.index(t)
             numSeq[k] = tp
         else:
             loc = 0
@@ -204,49 +204,15 @@ def num_mapping_Doublet(sq, alpha=0):
                 elif ePos > length:
                     ePos = ePos - length
                 elif ePos < 1:
-                    ePos = ePos + length    
-                         
+                    ePos = ePos + length
+
                 if sPos == length and ePos == 1:
                     t = sq[length] + sq[0]
                 else:
                     t = sq[sPos:ePos+1]
-                    
+
                 loc = loc + doublet.index(t)
             tp = loc/kStrings
             numSeq[k] = tp
-    
+
     return numSeq
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
