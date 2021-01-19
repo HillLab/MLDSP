@@ -10,7 +10,6 @@ import pywt
 # import os
 from statistics import median, mean
 from one_dimensional_num_mapping import *
-from mds import mds
 # plotting
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
@@ -18,10 +17,11 @@ from classification import classify_dismat
 from preprocessing import preprocessing
 from helpers import *
 from cgr import *
+from visualisation import dimReduction
 # set up
 # if os.path.exists("Sequence_database.idx"):
 #     os.remove("Sequence_database.idx")
-data_set = '../DataBase/Primates'
+data_set = './DataBase/Primates'
 test_set = 'NoData'
 seq_to_test = 0
 min_seq_len = 0
@@ -121,7 +121,6 @@ def phylogenetic_tree(distance_matrix):
     # can add code here for visualization with matplotlib
 
 
-# This needs to be modified for compute canada parallel processing
 if __name__ == '__main__':
     pool = Pool()
     print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
@@ -146,7 +145,7 @@ if __name__ == '__main__':
         i, j) for i in range(total_seq) for j in range(total_seq)))
     distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
     # change filename to unique ID
-    np.savetxt('distmat.txt', distance_matrix)
+    np.savetxt('./Python/plots/distmat.txt', distance_matrix, fmt='%.1g')
 
     print('Building Phylogenetic Trees')
     matrix_list = distance_matrix.tolist()
@@ -157,19 +156,19 @@ if __name__ == '__main__':
         row = (matrix_list[i][0:i+1])
         triangle_matrix.append(row)
     # change filename to unique ID
-    tree_print = open('upgma.tree', 'a')
+    tree_print = open('./Python/plots/upgma.tree', 'a')
     phylogenetic_tree(triangle_matrix)
     tree_print.close()
 
+    print('Scaling & data visualisation')
+    scaled_distance_matrix = dimReduction(distance_matrix, n_dim=3, method='tsne')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection = '3d')
+    ax.scatter(scaled_distance_matrix[:, 0], scaled_distance_matrix[:, 1], scaled_distance_matrix[:, 2])
+    plt.savefig('./Python/plots/multidimensional plot.png')
 
-    # Multi-dimensional Scaling: TODO
-
-    #scaled_data = mds('distmat.txt')
-
-    # 3D  plot: TODO
 
     # Classification
-
     print('Performing classification .... \n')
     folds = 10
     if (total_seq < folds):
@@ -179,3 +178,4 @@ if __name__ == '__main__':
     # accuracies = [accuracy, avg_accuracy];
     print('Classification accuracy 10 fold X 5 classifiers\n', accuracy)
     print('**** Processing completed ****\n')
+    pool.close()
