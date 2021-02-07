@@ -14,21 +14,21 @@ clear all;
 clc ;
 %warning('off','all')
 %read fasta files; give datasetName with complete path
-dataSet = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup'; 
+dataSet = '/Users/dolteanu/local_documents/Coding/MLDSP_github/DataBase/Primates';
 testingSet = 'NoData';% change to 'NoData' if there is no testing set
 %otherwise change as shown below and uncomment the testing code towards end
 %testingSet = 'F:\Exterm17Dec\Test4\Test\HalophileBacteria';
 seqToTest=0; % 0 to test all sequences, or any value upto number of available sequences
 minSeqLen = 0;    %shorter sequences will be omited, change to 0 for considering shorter sequences
 maxSeqLen = 0; %random fragment from longer sequences will be used, change to 0 for using original length of all sequences
-fragsPerSeq = 1; %shorter sequences will be considered as they are, multiple non-overlapping fragments will be used for longer sequences 
+fragsPerSeq = 1; %shorter sequences will be considered as they are, multiple non-overlapping fragments will be used for longer sequences
 %default is 1 fragment of length = maxSeqLen per sequence; if fragsPerSeq>1
 %then for each sequence, script selects non-overlapping fragments upto 'selected value' minimum(fragsPerSeq, maximum possible fragments)
 
 %select method
 methodsList = {'CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR'};
-methodNum=1; %change method number referring the variable above (between 1 and 16)
-kVal = 6; % used only for CGR-based representations(if methodNum=1,15,16)
+methodNum=14; %change method number referring the variable above (between 1 and 16)
+kVal = 4; % used only for CGR-based representations(if methodNum=1,15,16)
 
 selectedFolder = dataSet;
 fprintf('Reading sequences .... \n');%load('Bac2500seq.mat');
@@ -43,7 +43,7 @@ maxClusSize = 5000;
 
 %***Misclassified labels required***
 % value 0 runs in parallel and hence faster
-% 0 - for confusion matrix and classification accuracy scores 
+% 0 - for confusion matrix and classification accuracy scores
 % 1 - for misclassfied labels (in addition to above)
 msLblReq = 0;
 
@@ -62,27 +62,28 @@ mLen = medLen;
 nmValSH=cell(1,totalSeq);
 f=cell(1,totalSeq);
 lg=cell(1,totalSeq);
-
+sequence=cell(1,totalSeq);
 fprintf('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n');
 
-if(methodNum==1 || methodNum==15)    
+if(methodNum==1 || methodNum==15)
     parfor a = 1:totalSeq
         sq = upper(Seq{a});
-        if(methodNum==15)            
+        if(methodNum==15)
             sq = regexprep(sq,'G','A');
-            sq = regexprep(sq,'C','T');       
+            sq = regexprep(sq,'C','T');
         end
         nsNew = cgr(sq,'ACGT',kVal);
         nmValSH{a} =  nsNew;
         f{a} = fft(nsNew);
         lg{a} = abs(f{a});
+        sequence{a}=sq
     end
 
     %distance calculation by Pearson correlation coefficient
     fprintf('Computing Distance matrix .... \n');
     lgl = cell(1,totalSeq);
     parfor i=1:totalSeq
-        lgl{i} =  reshape(lg{i},1,[]);      
+        lgl{i} =  reshape(lg{i},1,[]);
     end
     lg = lgl;
     fm=cell2mat(lgl(:));
@@ -95,12 +96,13 @@ else
         parfor a = 1:totalSeq
             sq = upper(Seq{a});
             sq = regexprep(sq,'G','A');
-            sq = regexprep(sq,'C','T'); 
+            sq = regexprep(sq,'C','T');
+            sequence{a}=sq
             nmVal = cgr(sq,'ACGT',kVal);
-            nmValSH{a} = nmVal(cgrLen,1:cgrLen);  
+            nmValSH{a} = nmVal(cgrLen,1:cgrLen);
             f{a} = fft(nmValSH{a});
             lg{a} = abs(f{a});
-        end             
+        end
     else
         [ f, lg, nmValSH ] = oneDnumRepMethods(Seq, methodNum, mLen, totalSeq);
     end
@@ -118,7 +120,7 @@ fprintf('Generating 3D plot .... \n');
 index=1;
 counter=1;
 Cluster = zeros(1,totalSeq);
-for i=1:totalSeq   
+for i=1:totalSeq
     Cluster(i)=index;
     if(counter==pointsPerCluster{index})
         index=index+1;
@@ -205,17 +207,17 @@ fprintf('**** Processing completed ****\n');
 %         mkdir(nPath)
 %         cd(nPath);
 %         break;
-%     end  
+%     end
 %     i=i+1;
 % end
-% 
+%
 % % write classification results
 % cc = table2cell(ClassificationAccuracyScores);
 % cscore = string(cc);
 % cl= string(clusterNames);
 % LbRows = {'True_Predictor',cl{1:end}};
 % writematrix(cscore,'classScore3.xlsx');
-% 
+%
 % for i=1:length(cMat)
 %     cm = cMat{i};
 %     cMatrix = 0;
@@ -227,7 +229,7 @@ fprintf('**** Processing completed ****\n');
 %     sheetNum = i+1;
 %     writematrix(cMatrix,'classScore3.xlsx','Sheet',sheetNum);
 % end
-% 
+%
 % %write distance matrix
 % Lbs=[];
 % for i=1:numberOfClusters
@@ -242,16 +244,16 @@ fprintf('**** Processing completed ****\n');
 % acRow = {' ','AccessionNumber',AcNmb{1:end}};
 % disAll = [LbRow;acRow;disAll];
 % writematrix(disAll,'distMatr2.xlsx');
-% 
+%
 % %inter-cluster distance
 % avgDisB  = interClusDist( Cluster, uniqueClusters,disMat, numberOfClusters);
 % inClusDis = [cl.' avgDisB];
 % inClusDis = [LbRows;inClusDis];
 % writematrix(inClusDis,'IntClustDist2.xlsx');
-% 
+%
 % %write MoDMap
 % print(hf,'MoDMap','-dpng');
-% % 
+% %
 % % %testing part
 % if(~strcmp(testingSet,'NoData'))
 %     [tab,mList1,mList2,mList3,mList4,mList5,mList6]=testingExternMisList(testingSet,methodNum,disMat,alabels,lg,clusterNames,kVal,mLen,minSeqLen,maxSeqLen,seqToTest);
@@ -259,12 +261,12 @@ fprintf('**** Processing completed ****\n');
 %     tabc=[tab.Properties.VariableNames;tabc];
 %     tabc = string(tabc);
 %     writematrix(tabc,'testingMatrix4.xlsx');
-%     writematrix(string(mList1.'),'testingMatrix4.xlsx','Sheet',2);  
-%     writematrix(string(mList2.'),'testingMatrix4.xlsx','Sheet',3);  
-%     writematrix(string(mList3.'),'testingMatrix4.xlsx','Sheet',4);  
-%     writematrix(string(mList4.'),'testingMatrix4.xlsx','Sheet',5);  
-%     writematrix(string(mList5.'),'testingMatrix4.xlsx','Sheet',6); 
-%     writematrix(string(mList6.'),'testingMatrix4.xlsx','Sheet',7);  
+%     writematrix(string(mList1.'),'testingMatrix4.xlsx','Sheet',2);
+%     writematrix(string(mList2.'),'testingMatrix4.xlsx','Sheet',3);
+%     writematrix(string(mList3.'),'testingMatrix4.xlsx','Sheet',4);
+%     writematrix(string(mList4.'),'testingMatrix4.xlsx','Sheet',5);
+%     writematrix(string(mList5.'),'testingMatrix4.xlsx','Sheet',6);
+%     writematrix(string(mList6.'),'testingMatrix4.xlsx','Sheet',7);
 % end
-% 
+%
 % cd(cpth);
