@@ -1,4 +1,0 @@
-tCGR1=cgr(sq,'ACGT',kVal);
-sqr=seqrcomplement(sq);
-tCGR2=cgr(sqr,'ACGT',kVal);    
-tCGR = tCGR1+tCGR2;
