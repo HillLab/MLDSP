@@ -1,6 +1,5 @@
 import os
 from Bio import SeqIO
-data_set = '/Users/dolteanu/local_documents/MATLAB/DataBase/Primates/'
 
 
 def preprocessing(data_set):
@@ -23,7 +22,7 @@ def preprocessing(data_set):
     """
     # Dictionary to store SeqIO
     seq_dict = {}
-    cluster_names = os.listdir(data_set)
+    cluster_names = sorted(os.listdir(data_set))
     # dictionary with Accession ID as keys and cluster name as values
     cluster_dict = {}
     # number of samples in each cluster
@@ -40,7 +39,7 @@ def preprocessing(data_set):
         # get path for cluster as str
         cluster_path = os.path.join(data_set, cluster)
         # get names of files in cluster as list of str
-        file_name = os.listdir(cluster_path)
+        file_name = sorted(os.listdir(cluster_path))
         # Iterate over each file in the cluster
         for file in file_name:
             # get path for each file in cluster as str
@@ -57,7 +56,7 @@ def preprocessing(data_set):
             for accession_id in seqs.keys():
                 cluster_dict.update({accession_id: cluster})
     total_seq = len(seq_dict)
-    return seq_dict, cluster_names, number_of_clusters, total_seq, cluster_dict
+    return seq_dict, number_of_clusters, total_seq, cluster_dict
 
 # accession_cluster_list.append(accession_id) # Not required, can get this from cluster_dict
 

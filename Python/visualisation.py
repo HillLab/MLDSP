@@ -18,7 +18,7 @@ def dimReduction(data, n_dim, method):
         transformed = pca.fit_transform(data)
         return transformed
     elif method == 'mds':
-        mds = MDS(n_components=n_dim)
+        mds = MDS(n_components=n_dim,dissimilarity='precomputed')
         transformed = mds.fit_transform(data)
         return transformed
     elif method == 'tsne':

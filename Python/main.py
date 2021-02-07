@@ -3,7 +3,7 @@ from scipy import fft
 import numpy as np
 from multiprocessing import Pool
 from scipy.stats import pearsonr
-import Bio
+# import Bio
 from Bio.Phylo.TreeConstruction import *
 from functools import partial
 import pywt
@@ -18,24 +18,23 @@ from preprocessing import preprocessing
 from helpers import *
 from cgr import *
 from visualisation import dimReduction
-# set up
-# if os.path.exists("Sequence_database.idx"):
-#     os.remove("Sequence_database.idx")
-data_set = './DataBase/Primates'
-test_set = 'NoData'
-seq_to_test = 0
-min_seq_len = 0
-max_seq_len = 0
-frags_per_seq = 1
+# user set up
+data_set = '../DataBase/Primates'
+# Dictionary order & names dependent for downstream execution see line 86
 methods_list = {0: cgr, 1: num_mapping_PP, 2: num_mapping_Int, 3: num_mapping_IntN, 4: num_mapping_Real, 5: num_mapping_Doublet, 6: num_mapping_Codons, 7: num_mapping_Atomic,
                 8: num_mapping_EIIP, 9: num_mapping_AT_CG, 10: num_mapping_justA, 11: num_mapping_justC, 12: num_mapping_justG, 13: num_mapping_justT, 14: 'PuPyCGR', 15: '1DPuPyCGR'}
 # change method number referring the variable above (between 0 and 15)
-method_num = 0
+method_num = 6
+k_val = 4  # used only for CGR-based representations(if methodNum=1,15,16)
+## Not currently implemented, for future development
+# test_set = None 
+# seq_to_test = 0
+# min_seq_len = 0
+# max_seq_len = 0
+# frags_per_seq = 1
+
 method = methods_list.get(method_num)
-k_val = 3  # used only for CGR-based representations(if methodNum=1,15,16)
-
-seq_dict, cluster_names, number_of_clusters, total_seq, cluster_dict = preprocessing(data_set)
-
+seq_dict, number_of_clusters, total_seq, cluster_dict = preprocessing(data_set)
 # variable holding all the keys (accession numbers) for corresponding clusters
 keys = list(cluster_dict.keys())
 values = list(cluster_dict.values())
@@ -57,7 +56,7 @@ def compute_cgr_PuPyCGR(seq_index):
         seq_new = seq_new.replace('C', 'T')
     cgr_output = cgr(seq_new, 'ACGT', k_val)  # shape:[2^k, 2^k]
     # shape:[2^k, 2^k] # may not be appropriate to take by column
-    fft_output = fft.fft(cgr_output, axis=1)
+    fft_output = fft.fft(cgr_output, axis=0)
     abs_fft_output = np.abs(fft_output.flatten())
     return abs_fft_output, fft_output, cgr_output  # flatted into 1d array
 
@@ -71,7 +70,7 @@ def compute_1DPuPyCGR(seq_index):
     # takes only the last (bottom) row but all columns of cgr to make 1DPuPyCGR
     cgr_output = cgr_raw[-1, :]
     # shape:[1, 2^k] # may not be appropriate to take by column
-    fft_output = fft.fft(cgr_output)
+    fft_output = fft.fft(cgr_output, axis=0)
     abs_fft_output = np.abs(fft_output.flatten())
     return abs_fft_output, fft_output, cgr_output  # flatted into 1d array
 
@@ -79,9 +78,8 @@ def compute_1DPuPyCGR(seq_index):
 def one_dimensional_num_mapping_wrapper(seq_index):
     # normalize sequences to median sequence length of cluster
     seq_new = str(seq_dict[keys[seq_index]].seq)
-    len(seq_new)
     if len(seq_new) >= med_len:
-        seq_new = seq_new[1:round(med_len)]
+        seq_new = seq_new[0:round(med_len)]
     num_seq = method(seq_new)
     if len(num_seq) < med_len:
         pad_width = int(med_len - len(num_seq))
@@ -112,9 +110,9 @@ def phylogenetic_tree(distance_matrix):
     matrix = triangle_matrix
     distance_matrix = DistanceMatrix(names, matrix)
     constructor = DistanceTreeConstructor()
-    nj_tree = constructor.nj(distance_matrix)
-    # newick may not be need to be quoted
-    neighbour_joining_tree = nj_tree.format('newick')
+    # neighbour joining tree not currently output
+    # nj_tree = constructor.nj(distance_matrix)
+    # neighbour_joining_tree = nj_tree.format('newick')
     upgma = constructor.upgma(distance_matrix)
     upgma_tree = upgma.format('newick')
     print(upgma_tree, file=tree_print)
@@ -145,7 +143,7 @@ if __name__ == '__main__':
         i, j) for i in range(total_seq) for j in range(total_seq)))
     distance_matrix = np.array(distance_matrix).reshape(total_seq, total_seq)
     # change filename to unique ID
-    np.savetxt('./Python/plots/distmat.txt', distance_matrix, fmt='%.1g')
+    np.savetxt('./plots/distmat.txt', distance_matrix)
 
     print('Building Phylogenetic Trees')
     matrix_list = distance_matrix.tolist()
@@ -156,16 +154,16 @@ if __name__ == '__main__':
         row = (matrix_list[i][0:i+1])
         triangle_matrix.append(row)
     # change filename to unique ID
-    tree_print = open('./Python/plots/upgma.tree', 'a')
+    tree_print = open('./plots/upgma.tree', 'a')
     phylogenetic_tree(triangle_matrix)
     tree_print.close()
 
     print('Scaling & data visualisation')
-    scaled_distance_matrix = dimReduction(distance_matrix, n_dim=3, method='tsne')
+    scaled_distance_matrix = dimReduction(distance_matrix, n_dim=3, method='pca')
     fig = plt.figure()
     ax = fig.add_subplot(111, projection = '3d')
     ax.scatter(scaled_distance_matrix[:, 0], scaled_distance_matrix[:, 1], scaled_distance_matrix[:, 2])
-    plt.savefig('./Python/plots/multidimensional plot.png')
+    plt.savefig('./plots/multidimensional plot.png')
 
 
     # Classification
@@ -173,9 +171,9 @@ if __name__ == '__main__':
     folds = 10
     if (total_seq < folds):
         folds = total_seq
-    accuracy = classify_dismat(distance_matrix, labels, folds, total_seq)
+    mean_accuracy, accuracy = classify_dismat(distance_matrix, labels, folds, total_seq)
     # accuracy,avg_accuracy, clNames, cMat
     # accuracies = [accuracy, avg_accuracy];
-    print('Classification accuracy 10 fold X 5 classifiers\n', accuracy)
+    print('Classification accuracy 5 classifiers\n', accuracy)
     print('**** Processing completed ****\n')
     pool.close()
