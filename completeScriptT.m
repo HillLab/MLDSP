@@ -14,7 +14,7 @@ clear all;
 clc ;
 %warning('off','all')
 %read fasta files; give datasetName with complete path
-dataSet = 'C:\Users\GURJIT\Downloads\BcereusGroup\BcereusGroup';
+dataSet = '/Users/dolteanu/local_documents/Coding/MLDSP_github/DataBase/Primates';
 testingSet = 'NoData';% change to 'NoData' if there is no testing set
 %otherwise change as shown below and uncomment the testing code towards end
 %testingSet = 'F:\Exterm17Dec\Test4\Test\HalophileBacteria';
@@ -27,8 +27,8 @@ fragsPerSeq = 1; %shorter sequences will be considered as they are, multiple non
 
 %select method
 methodsList = {'CGR(ChaosGameRepresentation)','Purine-Pyrimidine','Integer','Integer (other variant)','Real','Doublet','Codons','Atomic','EIIP','PairedNumeric','JustA','JustC','JustG','JustT','PuPyCGR','1DPuPyCGR'};
-methodNum=1; %change method number referring the variable above (between 1 and 16)
-kVal = 6; % used only for CGR-based representations(if methodNum=1,15,16)
+methodNum=14; %change method number referring the variable above (between 1 and 16)
+kVal = 4; % used only for CGR-based representations(if methodNum=1,15,16)
 
 selectedFolder = dataSet;
 fprintf('Reading sequences .... \n');%load('Bac2500seq.mat');
@@ -62,7 +62,7 @@ mLen = medLen;
 nmValSH=cell(1,totalSeq);
 f=cell(1,totalSeq);
 lg=cell(1,totalSeq);
-
+sequence=cell(1,totalSeq);
 fprintf('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n');
 
 if(methodNum==1 || methodNum==15)
@@ -76,6 +76,7 @@ if(methodNum==1 || methodNum==15)
         nmValSH{a} =  nsNew;
         f{a} = fft(nsNew);
         lg{a} = abs(f{a});
+        sequence{a}=sq
     end
 
     %distance calculation by Pearson correlation coefficient
@@ -96,6 +97,7 @@ else
             sq = upper(Seq{a});
             sq = regexprep(sq,'G','A');
             sq = regexprep(sq,'C','T');
+            sequence{a}=sq
             nmVal = cgr(sq,'ACGT',kVal);
             nmValSH{a} = nmVal(cgrLen,1:cgrLen);
             f{a} = fft(nmValSH{a});

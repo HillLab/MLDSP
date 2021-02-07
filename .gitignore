@@ -1,5 +1,9 @@
-*Python/__pycache__*/*
+*Python/__pycache__*
 */.*
 .*
 
 
+Python/jupyter_main.py
+
+Python/processing.ipynb
+Python/matrixTeX.py
