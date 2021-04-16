@@ -9,7 +9,7 @@ Python/processing.ipynb
 Python/matrixTeX.py
 __pycache__/*
 MLDSP.code-workspace
-plots/*
+/plots/*
 .DS_Store
 distmat.hdf5
 
