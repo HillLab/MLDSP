@@ -7,10 +7,9 @@ Python/jupyter_main.py
 
 Python/processing.ipynb
 Python/matrixTeX.py
-__pycache__/cgr.cpython-38.pyc
-__pycache__/classification.cpython-38.pyc
-__pycache__/helpers.cpython-38.pyc
-__pycache__/one_dimensional_num_mapping.cpython-38.pyc
-__pycache__/preprocessing.cpython-38.pyc
-__pycache__/utils.cpython-38.pyc
-__pycache__/visualisation.cpython-38.pyc
+__pycache__/*
+MLDSP.code-workspace
+plots/*
+.DS_Store
+distmat.hdf5
+
