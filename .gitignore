@@ -7,4 +7,6 @@ MLDSP.code-workspace
 /plots/*
 *.DS_Store*
 distmat.hdf5
-
+.vscode
+.python-version
+distmat.txt
