@@ -160,6 +160,38 @@ if __name__ == '__main__':
     # phylogenetic_tree(triangle_matrix)
     # tree_print.close()
 
+    print('Visualizing fourier spectra')
+    # Run this cell for 1D numerical representations Fourier spectrum
+    median = int(med_len)
+    # fftshift the magnitude spectrum (required to visualize)
+    shifted_abs_fft = fftshift(abs_fft_output_list[0])
+    fig3, ax = plt.subplots(nrows=1, ncols=1)
+    # normalize the x axis to the length with -ve on left & +ve on right 
+    fVals = np.arange(start=-median/2, stop=median/2)/median
+    ax.plot(fVals,shifted_abs_fft)
+    ax.set_title('Double Sided FFT - with FFTShift')
+    ax.set_xlabel('Normalized Frequency')
+    ax.set_ylabel('|DFT Values|')
+    ax.autoscale(enable=True, axis='x', tight=True)
+    ax.set_xticks(np.arange(-0.5, 0.5+0.1,0.1))
+
+    length = (2**k_val)**2 
+    shifted_abs_fft = fftshift(abs_fft_output_list[0])
+    fig4, ax = plt.subplots(nrows=1, ncols=1)
+    fVals = np.arange(start=-length/2, stop=length/2)/length
+    ax.plot(fVals,shifted_abs_fft)
+    ax.set_title('Double Sided FFT - with FFTShift')
+    ax.set_xlabel('Length Normalized Frequency')
+    ax.set_ylabel('Magnitude')
+    ax.autoscale(enable=True, axis='x', tight=True)
+    ax.set_xticks(np.arange(-0.5, 0.5+0.1,0.1))
+
+    # Run only for CGR plotting
+    plt.matshow(cgr_output_list[0],cmap=cm.gray_r)
+    plt.xticks([])
+    plt.yticks([])
+    plt.savefig('./plots/cgr.png')
+
     print('Scaling & data visualisation')
     le = pe.LabelEncoder()
     le.fit(labels)

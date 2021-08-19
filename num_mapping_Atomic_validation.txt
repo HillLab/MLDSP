@@ -1,0 +1,470 @@
+Classification accuracy 5 classifiers:
+ {'LinearDiscriminant': 0.7280952380952381, 'LinearSVM': 0.7838095238095237, 'QuadSVM': 0.777142857142857, 'KNN': 0.9519047619047619}
+
+Comparing raw input sequences:
+[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True]
+
+Compare output of numerical representation:
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+[ True  True  True ...  True  True  True]
+
+Compare fft outputs:
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+
+Compare magnitudes of ffts:
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+
+Compare distance matrix:
+True
