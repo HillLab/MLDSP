@@ -2,8 +2,6 @@ __pycache__**
 Python/jupyter_main.py
 Python/processing.ipynb
 Python/matrixTeX.py
-__pycache__/*
-__pycache__*
 MLDSP.code-workspace
 /plots/*
 **.DS_Store**
