@@ -1,9 +1,10 @@
 import os
 import random
+import pandas as pd
 from Bio import SeqIO
+from collections import Counter
 
-
-def preprocessing(data_set, max_clust_size):
+def preprocessing(data_set, max_clust_size, metadata):
     """Preprocessing of fasta sequences using BioPython into a database of
     SeqRecord objects each representing a unique sequence, can handle multiple
     sequence fastas.
@@ -23,7 +24,37 @@ def preprocessing(data_set, max_clust_size):
     """
     # Dictionary to store SeqIO
     seq_dict = {}
-    # seq_dict = h5py.File('seq_dict.hdf5', 'w')
+    # dictionary with Accession ID as keys and cluster name as values
+    cluster_dict = {}
+    bad_keys=[]
+   
+    # Iterate through all fasta files
+    for f in sorted(os.listdir(data_set)):
+        file = os.path.join(data_set, f)
+        with open(file) as handle:
+            # SeqIO.index_db() is read only & can't multiprocess, SeqIO.index doesnt take file handle for multi-file, SeqIO_to_dict is all in memory, SeqIO.parse you only get to iterate over data once
+    #         # single dict
+            seq_dict.update(SeqIO.to_dict(SeqIO.parse(handle, "fasta")))
+            
+    cluster_dict = pd.read_csv(metadata,header=None, index_col=0, sep=None).squeeze("columns").to_dict()
+    cluster_stats = Counter(cluster_dict.values())
+    
+    for key in seq_dict.keys():
+        if not key in cluster_dict:
+            bad_keys.append(key)
+    
+    print(bad_keys)
+    #Might affect order of labels & lead to mislabelling
+    # for item in bad_keys:
+    #     seq_dict.pop(item)
+    
+    total_seq = len(seq_dict)
+    return seq_dict, total_seq, cluster_dict, cluster_stats
+
+
+def old_preprocessing(data_set, max_clust_size):
+    # Dictionary to store SeqIO
+    seq_dict = {}
     cluster_names = sorted(os.listdir(data_set))
     # dictionary with Accession ID as keys and cluster name as values
     cluster_dict = {}
@@ -31,13 +62,11 @@ def preprocessing(data_set, max_clust_size):
     # cluster_samples_info = {}
     # count of the number of clusters as int
     cluster_stats={}
-    # iterate through all the clusters' folders
-    paths = []
     # Iterate over each cluster (top level directories)
     for cluster in cluster_names:
         files = os.listdir(os.path.join(data_set, cluster))
         files = [os.path.join(data_set, cluster, f) for f in files]
-        paths.extend(files)
+        # paths.extend(files)
         # get path for cluster as str
         cluster_path = os.path.join(data_set, cluster)
         # get names of files in cluster as list of str
@@ -68,16 +97,8 @@ def preprocessing(data_set, max_clust_size):
         # else:
         #     seq_dict.update(temp_dict)
         # for accession_id in seq_dict.keys():
-        #     cluster_dict.update({accession_id: cluster})
+        #     cluster_dict.update({accession_id: cluster}) 
     total_seq = len(seq_dict)
     del temp_dict 
     del seqs
-    return seq_dict, cluster_stats, total_seq, cluster_dict
-
-# accession_cluster_list.append(accession_id) # Not required, can get this from cluster_dict
-
-# Not used because it generates a SQLite3 database which cannot be used with multiprocessing
-# # Actual creation of sequences database (BioSQL) containing SeqRecords,
-# # SeqIO.index_db doesnt allow the addition of info to the database,
-# # otherwise we can bypass the use of SeqIO.index().
-# seqs = SeqIO.index_db('Sequence_database.idx', paths, "fasta")
+    return seq_dict, total_seq, cluster_dict, cluster_stats

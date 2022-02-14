@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import MDS, TSNE
+from skbio.stats.ordination import pcoa
 
 def dimReduction(data, n_dim, method):
     """
@@ -14,12 +15,13 @@ def dimReduction(data, n_dim, method):
     :return np.array transformed: nxn_dim array of tranformed data
     """
     if method == 'pca':
-        pca = PCA(n_components=n_dim)
+        pca = PCA(n_components=n_dim,svd_solver='full')
         transformed = pca.fit_transform(data)
         return transformed
+    #Not working should be same mds algorithm as matlab
     elif method == 'mds':
-        mds = MDS(n_components=n_dim,dissimilarity='precomputed')
-        transformed = mds.fit_transform(data)
+        mds = pcoa(data, number_of_dimensions=n_dim)
+        transformed = mds.samples
         return transformed
     elif method == 'tsne':
         tsne = TSNE(n_components=n_dim)

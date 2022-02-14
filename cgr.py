@@ -17,13 +17,13 @@ def cgr(chars, order, k):
     for i in range(len(chars)):
         char = chars[i]
         # devide x coordiate in half, moving it halfway to the left, this is correct if base is C or A
-        x = int(np.fix(x/2))
+        x = int(x/2)
         # check to see if base is actually a G or T
         if char == order[2] or char == order[3]:  # if the nucleotide is G or T
             # add 2^(k-1) aka half the cgr length to the x value, brining it from 1/4 to 3/4
             x += 2**(k-1)
         # devide y coordiate in half, moving it halfway to the top, this is correct if base is C or G
-        y = int(np.fix(y/2))
+        y = int(y/2)
         if char == order[0] or char == order[3]:  # if the nucleotide is A or T
             # add 2^(k-1) aka half the cgr length to the y value, brining it from 1/4 to 3/4
             y += 2**(k-1)

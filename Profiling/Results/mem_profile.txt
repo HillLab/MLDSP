@@ -1,0 +1,10 @@
+<frozen importlib._bootstrap_external>:580: size=48.6 MiB, count=420553, average=121 B
+<frozen importlib._bootstrap>:219: size=5902 KiB, count=55538, average=109 B
+/Users/dolteanu/.pyenv/versions/MLDSP/lib/python3.8/site-packages/Bio/Seq.py:1725: size=2408 KiB, count=148, average=16.3 KiB
+/Users/dolteanu/.pyenv/versions/3.8.0/lib/python3.8/abc.py:85: size=1299 KiB, count=3886, average=342 B
+/Users/dolteanu/.pyenv/versions/3.8.0/lib/python3.8/xml/etree/ElementTree.py:1320: size=771 KiB, count=11249, average=70 B
+/Users/dolteanu/local_documents/Coding/MLDSP_dev_git/main.py:213: size=694 KiB, count=22204, average=32 B
+/Users/dolteanu/.pyenv/versions/MLDSP/lib/python3.8/site-packages/scipy/_lib/doccer.py:66: size=675 KiB, count=220, average=3143 B
+/Users/dolteanu/.pyenv/versions/3.8.0/lib/python3.8/linecache.py:137: size=646 KiB, count=6317, average=105 B
+/Users/dolteanu/.pyenv/versions/MLDSP/lib/python3.8/site-packages/scipy/fft/_pocketfft/basic.py:31: size=610 KiB, count=447, average=1397 B
+<frozen importlib._bootstrap_external>:64: size=587 KiB, count=4014, average=150 B

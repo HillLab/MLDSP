@@ -12,22 +12,11 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.neighbors import KNeighborsClassifier
 from collections import defaultdict
 
-## Creates and trains various classifiers (linear-discriminant, linear svm, quadratic svm, fine knn) on input sequences and labels
-## Parameters:
-# - dismat (array): distance matrix between sequences
-# - alabels (list): labels corresponding to individual sequences
-# - folds (int): number of folds to use when splitting dataset
-# - total (int): total number of sequences
-# - saveModels (bool): whether or not to save models to file
-## Return:
-# - avgAccuracy (float): mean accuracy across all models
-# - meanModelAccuracies (dictionary): mean accuracy per model
-# - aggregatedCMatrix (dictionary): aggregated confusion matrix per model
-# - misclassifiedIdx (dictionary): misclassified indices per model
 def classify_dismat(dismat, alabels, folds, total, saveModels=False):
 
-    kf = KFold(n_splits=folds, shuffle=True, random_state=23)
-    model_names = {'LinearDiscriminant':LinearDiscriminantAnalysis(), 'LinearSVM':SVC(kernel='linear'), 'QuadSVM':SVC(kernel='poly', degree=2),
+    kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
+    model_names = {'LinearDiscriminant':LinearDiscriminantAnalysis() #matlab doesn't specify what solver it uses, orginal code used (shrinkage) gamma=0 
+                   ,'LinearSVM':SVC(kernel='linear',cache_size=1000,decision_function_shape='ovo'), 'QuadSVM':SVC(kernel='poly', degree=2,cache_size=1000,decision_function_shape='ovo'),
                    'KNN':KNeighborsClassifier(n_neighbors=1, leaf_size=50, metric='euclidean', weights='uniform', algorithm='brute')
                    }
     # use 2 additional classifiers if <= 2000 sequences
@@ -42,13 +31,16 @@ def classify_dismat(dismat, alabels, folds, total, saveModels=False):
     # Loop through each model
     for modelName in model_names:
         model = model_names.get(modelName)
+        print(model)
         # Create pipeline model
         if modelName in ['LinearSVM', 'QuadSVM', 'KNN']:
             pipeModel = make_pipeline(StandardScaler(), model)
         else:
             pipeModel = make_pipeline(model)
-
+            
+        i =0
         for train_index, test_index in kf.split(dismat, alabels):
+            i += 1
             X_train = dismat[train_index]
             X_test = dismat[test_index]
             y_train = [alabels[i] for i in train_index]
@@ -59,7 +51,7 @@ def classify_dismat(dismat, alabels, folds, total, saveModels=False):
             prediction = pipeModel.predict(X_test)
             # Compute and store accuracy of model
             accuracies[modelName].append(accuracy_score(y_test, prediction))
-
+            print(accuracy_score(y_test, prediction))
             # Generate and store confusion matrix
             cm = confusion_matrix(y_test, prediction, labels=list(np.unique(alabels)), normalize=None)
             confMatrixDict[modelName].append(cm)
@@ -69,6 +61,7 @@ def classify_dismat(dismat, alabels, folds, total, saveModels=False):
                 # if prediction incorrect, add to list of misclassified indices for the model
                 if prediction[i] != y_test[i]:
                     misclassifiedIdx[modelName].append(test_index[i])
+            print(i)
 
     # For each model, Calculate mean of accuracies across 10 folds & Sum all confusion matrices across 10 folds
     meanModelAccuracies = {} # key: modelName, value: mean accuracy value for model
