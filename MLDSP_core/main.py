@@ -52,8 +52,6 @@ def main(args: Namespace):
     np.save(str(out_fn), np.array(labels))
     med_len = np.median(seqs_length)
     print(f'Mean seq length: {med_len}')
-    seq_new_list = []
-    seq_list = []
     with open(results_path.joinpath('Run_data.txt'), 'x') as log:
         log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: '
                   f'{k_val}\nMedian seq length: {med_len}\nCluster '

@@ -21,3 +21,6 @@ methods_list = {1: num_mapping_PP,
                 14: compute_cgr,
                 15: PuPyCGR,
                 16: oneDPuPyCGR}
+
+# TODO: @DANIEL add a string mapping the number with the name of each of
+#  the methods with a brief explanation of the method

@@ -2,190 +2,85 @@
 @Daniel
 """
 from pathlib import Path
+from string import ascii_uppercase
 from typing import Callable, Tuple, Any
 
-import numpy as np
+from numpy import ndarray, array, vectorize, where, zeros, save, abs
 from pyfaidx import FastaRecord
 from pywt import pad
 from scipy import fft
 
-
-def num_mapping_AT_CG(sq: str) -> np.array:
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t == 'A':
-            numSeq[k] = 1
-        elif t == 'C':
-            numSeq[k] = -1
-        elif t == 'G':
-            numSeq[k] = -1
-        elif t == 'T':
-            numSeq[k] = 1
-        else:
-            pass
-    return numSeq
+ZERO_MAP = ascii_uppercase.translate({65: '', 84: '', 71: '', 67: ''})
+ZERO_MAP = dict(zip(ZERO_MAP, [0] * len(ZERO_MAP)))
 
 
-def num_mapping_justA(sq: str) -> np.array:
-    a = "A"
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == a:
-            numSeq[k] = 1
-        else:
-            pass
-    return numSeq
+def num_mapping_AT_CG(sq: ndarray) -> ndarray:
+    mapping = dict(**{'A': 1, 'C': -1, 'G': -1, 'T': 1}, **ZERO_MAP)
+    return vectorize(mapping.get)(sq)
 
 
-def num_mapping_justC(sq: str) -> np.array:
-    c = "C"
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == c:
-            numSeq[k] = 1
-        else:
-            pass
-    return numSeq
+def num_mapping_justA(sq: ndarray) -> ndarray:
+    return where(sq == 'A', 1, 0)
 
 
-def num_mapping_justG(sq: str) -> np.array:
-    g = "G"
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == g:
-            numSeq[k] = 1
-        else:
-            pass
-    return numSeq
+def num_mapping_justC(sq: ndarray) -> ndarray:
+    return where(sq == 'C', 1, 0)
 
 
-def num_mapping_justT(sq: str) -> np.array:
-    t_ = "T"
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == t_:
-            numSeq[k] = 1
-        else:
-            pass
-    return numSeq
+def num_mapping_justG(sq: ndarray) -> ndarray:
+    return where(sq == 'G', 1, 0)
 
 
-def num_mapping_Real(sq: str) -> np.array:
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == "A":
-            numSeq[k] = -1.5
-        elif t.upper() == "C":
-            numSeq[k] = 0.5
-        elif t.upper() == "G":
-            numSeq[k] = -0.5
-        elif t.upper() == "T":
-            numSeq[k] = 1.5
-        else:
-            pass
-    return numSeq
+def num_mapping_justT(sq: ndarray) -> ndarray:
+    return where(sq == 'T', 1, 0)
 
 
-def num_mapping_PP(sq: str) -> np.array:
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == "A":
-            numSeq[k] = -1
-        elif t.upper() == "C":
-            numSeq[k] = 1
-        elif t.upper() == "G":
-            numSeq[k] = -1
-        elif t.upper() == "T":
-            numSeq[k] = 1
-        else:
-            pass
-    return numSeq
+def num_mapping_Real(sq: ndarray) -> ndarray:
+    mapping = dict(**{'A': -1.5, 'C': 0.5, 'G': -0.5, 'T': 1.5}, **ZERO_MAP)
+    return vectorize(mapping.get)(sq)
 
 
-def num_mapping_IntN(sq: str) -> np.array:
-    dob = ['T', 'C', 'A', 'G']
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        tp = dob.index(t) + 1
-        numSeq[k] = tp
-    return numSeq
+def num_mapping_PP(sq: ndarray) -> ndarray:
+    mapping = dict(**{'A': -1, 'C': 1, 'G': -1, 'T': 1}, **ZERO_MAP)
+    return vectorize(mapping.get)(sq)
 
 
-def num_mapping_Int(sq: str) -> np.array:
-    dob = ['T', 'C', 'A', 'G']
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        tp = dob.index(t)
-        numSeq[k] = tp
-    return numSeq
+def num_mapping_IntN(sq: ndarray) -> ndarray:
+    dob = dict(**{'T': 1, 'C': 2, 'A': 3, 'G': 4}, **ZERO_MAP)
+    return vectorize(dob.get)(sq)
 
 
-def num_mapping_EIIP(sq: str) -> np.array:
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == "A":
-            numSeq[k] = 0.1260
-        elif t.upper() == "C":
-            numSeq[k] = 0.1340
-        elif t.upper() == "G":
-            numSeq[k] = 0.0806
-        elif t.upper() == "T":
-            numSeq[k] = 0.1335
-        else:
-            pass
-    return numSeq
+def num_mapping_Int(sq: ndarray) -> ndarray:
+    dob = dict(**{'T': 0, 'C': 1, 'A': 2, 'G': 3}, **ZERO_MAP)
+    return vectorize(dob.get)(sq)
 
 
-def num_mapping_Atomic(sq: str) -> np.array:
-    length = len(sq)
-    numSeq = np.zeros(length)
-    for k in range(0, length):
-        t = sq[k]
-        if t.upper() == "A":
-            numSeq[k] = 70
-        elif t.upper() == "C":
-            numSeq[k] = 58
-        elif t.upper() == "G":
-            numSeq[k] = 78
-        elif t.upper() == "T":
-            numSeq[k] = 66
-        else:
-            pass
-    return numSeq
+def num_mapping_EIIP(sq: ndarray) -> ndarray:
+    mapping = dict(**{'A': 0.1260, 'C': 0.1340, 'G': 0.0806, 'T': 0.1335},
+                   **ZERO_MAP)
+    return vectorize(mapping.get)(sq)
 
 
-def num_mapping_Codons(sq: str) -> np.array:
+def num_mapping_Atomic(sq: ndarray) -> ndarray:
+    mapping = dict(**{"A": 70, "C": 58, "G": 78, "T": 66},
+                   **ZERO_MAP)
+    return vectorize(mapping.get)(sq)
+
+
+def num_mapping_Codons(sq: ndarray) -> ndarray:
     # Authored by Wanxin Li @wxli0
+    sq = ''.join(sq)
     length = len(sq)
-    numSeq = np.zeros(length)
-    codons = ['TTT', 'TTC', 'TTA', 'TTG', 'CTT', 'CTC', 'CTA', 'CTG', 'TCT', 'TCC', 'TCA', 'TCG', 'AGT', 'AGC', 'TAT',
-              'TAC',
-              'TAA', 'TAG', 'TGA', 'TGT', 'TGC', 'TGG', 'CCT', 'CCC', 'CCA', 'CCG', 'CAT', 'CAC', 'CAA', 'CAG', 'CGT',
-              'CGC',
-              'CGA', 'CGG', 'AGA', 'AGG', 'ATT', 'ATC', 'ATA', 'ATG', 'ACT', 'ACC', 'ACA', 'ACG', 'AAT', 'AAC', 'AAA',
-              'AAG',
-              'GTT', 'GTC', 'GTA', 'GTG', 'GCT', 'GCC', 'GCA', 'GCG', 'GAT', 'GAC', 'GAA', 'GAG', 'GGT', 'GGC', 'GGA',
-              'GGG']
+    numSeq = zeros(length)
+    codons = ['TTT', 'TTC', 'TTA', 'TTG', 'CTT', 'CTC', 'CTA', 'CTG',
+              'TCT', 'TCC', 'TCA', 'TCG', 'AGT', 'AGC', 'TAT', 'TAC',
+              'TAA', 'TAG', 'TGA', 'TGT', 'TGC', 'TGG', 'CCT', 'CCC',
+              'CCA', 'CCG', 'CAT', 'CAC', 'CAA', 'CAG', 'CGT', 'CGC',
+              'CGA', 'CGG', 'AGA', 'AGG', 'ATT', 'ATC', 'ATA', 'ATG',
+              'ACT', 'ACC', 'ACA', 'ACG', 'AAT', 'AAC', 'AAA', 'AAG',
+              'GTT', 'GTC', 'GTA', 'GTG', 'GCT', 'GCC', 'GCA', 'GCG',
+              'GAT', 'GAC', 'GAA', 'GAG', 'GGT', 'GGC', 'GGA', 'GGG']
+
     for idx in range(length):
         if idx <= (length - 3):
             t = sq[idx:idx + 3]
@@ -198,20 +93,20 @@ def num_mapping_Codons(sq: str) -> np.array:
     return numSeq
 
 
-def num_mapping_Doublet(sq: str) -> np.array:
+def num_mapping_Doublet(sq: ndarray) -> ndarray:
     # Authored by Wanxin Li @wxli0
     """computes Doublet representation
     Keyword arguments:
     sq: sequence
     """
+    sq = ''.join(sq)
     sq_len = len(sq)
-    doublet = ['AA', 'AT', 'TA', 'AG', 'TT', 'TG', 'AC',
-               'TC', 'GA', 'CA', 'GT', 'GG', 'CT', 'GC', 'CG', 'CC']
-    numSeq = np.zeros(len(sq))
-    # alpha = 0 # TODO: remove alpha for now, if alpha is added, then Codons also needs to be updated
+    doublet = ['AA', 'AT', 'TA', 'AG', 'TT', 'TG', 'AC', 'TC', 'GA',
+               'CA', 'GT', 'GG', 'CT', 'GC', 'CG', 'CC']
+    numSeq = zeros(len(sq))
+    # TODO: remove alpha for now, if alpha is added, then Codons also needs to be updated
 
     for idx in range(sq_len):
-        # if alpha == 0:
         if idx < (sq_len - 1):
             t = sq[idx:idx + 2]
         else:
@@ -221,9 +116,9 @@ def num_mapping_Doublet(sq: str) -> np.array:
     return numSeq
 
 
-def one_dimensional_num_mapping_wrapper(seq: FastaRecord, method: Callable,
-                                        results_path: Path, med_len: int = 100
-                                        ) -> Tuple[Any, Any, None]:
+def one_dimensional_num_mapping_wrapper(
+        seq: FastaRecord, method: Callable, results_path: Path,
+        med_len: int = 100) -> Tuple[Any, Any, None]:
     """
     @Daniel
     Args:
@@ -236,16 +131,16 @@ def one_dimensional_num_mapping_wrapper(seq: FastaRecord, method: Callable,
 
     """
     # normalize sequences to median seq length of cluster
-    seq_new = str(seq)
+    seq_new = str(seq).upper()
     name = seq.name
     if len(seq_new) >= med_len:
         seq_new = seq_new[0:round(med_len)]
-    num_seq = method(seq_new)
+    num_seq = method(array(list(seq_new)))
     if len(num_seq) < med_len:
         pad_width = int(med_len - len(num_seq))
         num_seq = pad(num_seq, pad_width, 'antisymmetric')[pad_width:]
     ofname = results_path.joinpath('Num_rep', f'{str(method).split()[1]}_{name}').resolve
-    np.save(str(ofname), num_seq)
+    save(str(ofname), num_seq)
     fft_output = fft.fft(num_seq)
-    abs_fft_output = np.abs(fft_output.flatten())
+    abs_fft_output = abs(fft_output.flatten())
     return abs_fft_output, fft_output, None
