@@ -1,7 +1,16 @@
+"""
+@Daniel
+"""
+from pathlib import Path
+from typing import Callable, Tuple, Any
+
 import numpy as np
+from pyfaidx import FastaRecord
+from pywt import pad
+from scipy import fft
 
 
-def num_mapping_AT_CG(sq):
+def num_mapping_AT_CG(sq: str) -> np.array:
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -19,7 +28,7 @@ def num_mapping_AT_CG(sq):
     return numSeq
 
 
-def num_mapping_justA(sq):
+def num_mapping_justA(sq: str) -> np.array:
     a = "A"
     length = len(sq)
     numSeq = np.zeros(length)
@@ -32,7 +41,7 @@ def num_mapping_justA(sq):
     return numSeq
 
 
-def num_mapping_justC(sq):
+def num_mapping_justC(sq: str) -> np.array:
     c = "C"
     length = len(sq)
     numSeq = np.zeros(length)
@@ -45,7 +54,7 @@ def num_mapping_justC(sq):
     return numSeq
 
 
-def num_mapping_justG(sq):
+def num_mapping_justG(sq: str) -> np.array:
     g = "G"
     length = len(sq)
     numSeq = np.zeros(length)
@@ -58,7 +67,7 @@ def num_mapping_justG(sq):
     return numSeq
 
 
-def num_mapping_justT(sq):
+def num_mapping_justT(sq: str) -> np.array:
     t_ = "T"
     length = len(sq)
     numSeq = np.zeros(length)
@@ -71,7 +80,7 @@ def num_mapping_justT(sq):
     return numSeq
 
 
-def num_mapping_Real(sq):
+def num_mapping_Real(sq: str) -> np.array:
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -89,7 +98,7 @@ def num_mapping_Real(sq):
     return numSeq
 
 
-def num_mapping_PP(sq):
+def num_mapping_PP(sq: str) -> np.array:
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -107,7 +116,7 @@ def num_mapping_PP(sq):
     return numSeq
 
 
-def num_mapping_IntN(sq):
+def num_mapping_IntN(sq: str) -> np.array:
     dob = ['T', 'C', 'A', 'G']
     length = len(sq)
     numSeq = np.zeros(length)
@@ -118,7 +127,7 @@ def num_mapping_IntN(sq):
     return numSeq
 
 
-def num_mapping_Int(sq):
+def num_mapping_Int(sq: str) -> np.array:
     dob = ['T', 'C', 'A', 'G']
     length = len(sq)
     numSeq = np.zeros(length)
@@ -129,7 +138,7 @@ def num_mapping_Int(sq):
     return numSeq
 
 
-def num_mapping_EIIP(sq):
+def num_mapping_EIIP(sq: str) -> np.array:
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -147,7 +156,7 @@ def num_mapping_EIIP(sq):
     return numSeq
 
 
-def num_mapping_Atomic(sq):
+def num_mapping_Atomic(sq: str) -> np.array:
     length = len(sq)
     numSeq = np.zeros(length)
     for k in range(0, length):
@@ -165,27 +174,31 @@ def num_mapping_Atomic(sq):
     return numSeq
 
 
-def num_mapping_Codons(sq):
+def num_mapping_Codons(sq: str) -> np.array:
     # Authored by Wanxin Li @wxli0
     length = len(sq)
     numSeq = np.zeros(length)
-    codons = ['TTT','TTC','TTA','TTG','CTT','CTC','CTA','CTG','TCT','TCC','TCA','TCG','AGT','AGC','TAT','TAC',
-              'TAA','TAG','TGA','TGT','TGC','TGG','CCT','CCC','CCA','CCG','CAT','CAC','CAA','CAG','CGT','CGC',
-              'CGA','CGG','AGA','AGG','ATT','ATC','ATA','ATG','ACT','ACC','ACA','ACG','AAT','AAC','AAA','AAG',
-              'GTT','GTC','GTA','GTG','GCT','GCC','GCA','GCG','GAT','GAC','GAA','GAG','GGT','GGC','GGA','GGG']
+    codons = ['TTT', 'TTC', 'TTA', 'TTG', 'CTT', 'CTC', 'CTA', 'CTG', 'TCT', 'TCC', 'TCA', 'TCG', 'AGT', 'AGC', 'TAT',
+              'TAC',
+              'TAA', 'TAG', 'TGA', 'TGT', 'TGC', 'TGG', 'CCT', 'CCC', 'CCA', 'CCG', 'CAT', 'CAC', 'CAA', 'CAG', 'CGT',
+              'CGC',
+              'CGA', 'CGG', 'AGA', 'AGG', 'ATT', 'ATC', 'ATA', 'ATG', 'ACT', 'ACC', 'ACA', 'ACG', 'AAT', 'AAC', 'AAA',
+              'AAG',
+              'GTT', 'GTC', 'GTA', 'GTG', 'GCT', 'GCC', 'GCA', 'GCG', 'GAT', 'GAC', 'GAA', 'GAG', 'GGT', 'GGC', 'GGA',
+              'GGG']
     for idx in range(length):
-        if idx <= (length-3):
-            t = sq[idx:idx+3]
-        elif idx == (length-2):
-            t = sq[idx:idx+2]+sq[0:1]
+        if idx <= (length - 3):
+            t = sq[idx:idx + 3]
+        elif idx == (length - 2):
+            t = sq[idx:idx + 2] + sq[0:1]
         else:
-            t = sq[idx]+sq[0:2]
+            t = sq[idx] + sq[0:2]
         tp = codons.index(t)
         numSeq[idx] = tp
     return numSeq
 
 
-def num_mapping_Doublet(sq):
+def num_mapping_Doublet(sq: str) -> np.array:
     # Authored by Wanxin Li @wxli0
     """computes Doublet representation
     Keyword arguments:
@@ -199,10 +212,40 @@ def num_mapping_Doublet(sq):
 
     for idx in range(sq_len):
         # if alpha == 0:
-        if idx < (sq_len-1):
-            t = sq[idx:idx+2]
+        if idx < (sq_len - 1):
+            t = sq[idx:idx + 2]
         else:
-            t = sq[idx]+sq[0]
+            t = sq[idx] + sq[0]
         tp = doublet.index(t)
         numSeq[idx] = tp
     return numSeq
+
+
+def one_dimensional_num_mapping_wrapper(seq: FastaRecord, method: Callable,
+                                        results_path: Path, med_len: int = 100
+                                        ) -> Tuple[Any, Any, None]:
+    """
+    @Daniel
+    Args:
+        seq:
+        method:
+        results_path:
+        med_len:
+
+    Returns:
+
+    """
+    # normalize sequences to median seq length of cluster
+    seq_new = str(seq)
+    name = seq.name
+    if len(seq_new) >= med_len:
+        seq_new = seq_new[0:round(med_len)]
+    num_seq = method(seq_new)
+    if len(num_seq) < med_len:
+        pad_width = int(med_len - len(num_seq))
+        num_seq = pad(num_seq, pad_width, 'antisymmetric')[pad_width:]
+    ofname = results_path.joinpath('Num_rep', f'{str(method).split()[1]}_{name}').resolve
+    np.save(str(ofname), num_seq)
+    fft_output = fft.fft(num_seq)
+    abs_fft_output = np.abs(fft_output.flatten())
+    return abs_fft_output, fft_output, None
