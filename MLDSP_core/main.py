@@ -5,14 +5,16 @@ TBD @DANIEL
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, \
     Action
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from os import getenv
 from pathlib import Path
 from shutil import rmtree
-from typing import Dict, Callable
+from typing import Dict, Callable, Tuple, Any
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+from joblib import Parallel, delayed
+from pyfaidx import FastaRecord
 from pywt import pad
 from scipy import fft
 from sklearn import preprocessing as pe
@@ -24,43 +26,39 @@ from MLDSP_core.preprocessing import preprocessing
 from MLDSP_core.visualisation import dimReduction
 
 
-def compute_cgr(seq_index: int, seq_dict: Dict[str], keys: str,
-                method_num: int, k_val: int, results_path: Path,
-                order: str = 'ACGT'):
+def compute_cgr(seq: FastaRecord, method_number: int, kmer: int,
+                results: Path, order: str = 'ACGT'
+                ) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:
-        seq_index:
-        seq_dict:
-        keys:
-        method_num:
-        k_val:
-        results_path:
+        seq: FastaRecord instance with the sequence and name of the sequence
+        method_number: Method used to compute CGR
+        kmer: Kmer value to use
+        results: Path to the results folder
+        order: Order of the nucleotides in the Chaos square
 
     Returns:
 
     """
-    # seqs is the sequence database, it is being called by accession number
-    # (keys) which is being iterated over all seq_index,
-    # (count of all sequences in uploaded dataset) .seq calls the string
-    seq_new = str(seq_dict[keys[seq_index]].seq)
+    seq_new = str(seq)
+    name = seq.name
     # Replace complementary Purine/Pyrimidine
-    if method_num == 15 or method_num == 16:
-        seq_new = seq_new.replace('G', 'A')
-        seq_new = seq_new.replace('C', 'T')
-    cgr_raw = cgr(seq_new, order, k_val)  # shape:[2^k, 2^k]
+    if method_number == 15 or method_number == 16:
+        seq_new = seq_new.replace('G', 'A').replace('C', 'T')
+    cgr_raw = cgr(seq_new, order, kmer)
     # takes only the last (bottom) row but all columns of cgr to make 1DPuPyCGR
-    if method_num == 16:
-        cgr_output = cgr_raw[-1, :]
+    if method_number == 16:
+        cgr_out = cgr_raw[-1, :]
     else:
-        cgr_output = cgr_raw
+        cgr_out = cgr_raw
     # shape:[2^k, 2^k] # may not be appropriate to take by column
-    out_fn = str(results_path.joinpath(
-        'Num_rep', f'cgr_k={k_val}_{seq_index}').resolve())
-    np.save(out_fn, cgr_output)
-    fft_output = fft.fft(cgr_output, axis=0)
-    abs_fft_output = np.abs(fft_output.flatten())
-    return abs_fft_output, fft_output, cgr_output  # flatted into 1d array
+    out_filename = str(results.joinpath(
+        'Num_rep', f'cgr_k={kmer}_{name}').resolve())
+    np.save(out_filename, cgr_out)
+    fft_out = fft.fft(cgr_out, axis=0)
+    abs_fft_out = np.abs(fft_out.flatten())
+    return abs_fft_out, fft_out, cgr_out  # flatted into 1d array
 
 
 def one_dimensional_num_mapping_wrapper(
@@ -79,7 +77,7 @@ def one_dimensional_num_mapping_wrapper(
     Returns:
 
     """
-    # normalize sequences to median sequence length of cluster
+    # normalize sequences to median seq length of cluster
     seq_new = str(seq_dict[keys[seq_index]].seq)
     if len(seq_new) >= med_len:
         seq_new = seq_new[0:round(med_len)]
@@ -112,17 +110,20 @@ if __name__ == '__main__':
             setattr(namespace, self.dest, p)
 
 
-    formr = ArgumentDefaultsHelpFormatter
-    # noinspection PyTypeChecker
     opt = ArgumentParser(usage='%(prog)s data_set_path metadata [options]',
-                         formatter_class=formr)
+                         formatter_class=ArgumentDefaultsHelpFormatter)
     opt.add_argument('data_set', help='Path to data set to be analysed',
                      action=PathAction)
     opt.add_argument('metadata', help='Metadata of your sample sequences')
-    opt.add_argument('--run_name', help='Name of the run',
+    opt.add_argument('--run_name', '-r', help='Name of the run',
                      default='Bacteria')
-    opt.add_argument('--output_directory', help='Path to the output directory',
+    opt.add_argument('--output_directory', '-o',
+                     help='Path to the output directory',
                      default=Path(), action=PathAction)
+    opt.add_argument('--cpus', '-c', help='Number of cpus to use',
+                     default=cpu_count(), type=int)
+    opt.add_argument('--order', '-d', help='Order of the nucleotides in CGR',
+                     default='ACGT', type=str)
 
     args = opt.parse_args()
 
@@ -137,66 +138,71 @@ if __name__ == '__main__':
         parents=True)
 
     # Dictionary order & names dependent for downstream execution 
-    methods_list = {1: num_mapping_PP, 2: num_mapping_Int, 3: num_mapping_IntN, 4: num_mapping_Real,
-                    5: num_mapping_Doublet, 6: num_mapping_Codons, 7: num_mapping_Atomic,
-                    8: num_mapping_EIIP, 9: num_mapping_AT_CG, 10: num_mapping_justA, 11: num_mapping_justC,
-                    12: num_mapping_justG, 13: num_mapping_justT, 14: 'cgr', 15: 'PuPyCGR', 16: '1DPuPyCGR'}
+    methods_list = {1: num_mapping_PP,
+                    2: num_mapping_Int,
+                    3: num_mapping_IntN,
+                    4: num_mapping_Real,
+                    5: num_mapping_Doublet,
+                    6: num_mapping_Codons,
+                    7: num_mapping_Atomic,
+                    8: num_mapping_EIIP,
+                    9: num_mapping_AT_CG,
+                    10: num_mapping_justA,
+                    11: num_mapping_justC,
+                    12: num_mapping_justG,
+                    13: num_mapping_justT,
+                    14: 'cgr',
+                    15: 'PuPyCGR',
+                    16: '1DPuPyCGR'}
     # Change method number referring the variable above (between 1 and 16)
     method_num = 14
     k_val = 5  # used only for CGR-based representations(if methodNum=14,15,16)
     # End of user set up
 
-    # Not currently implemented, for future development
-    # test_set = None 
-    # seq_to_test = 0
-    # min_seq_len = 0
     max_clust_size = 10000000
     # frags_per_seq = 1
     method = methods_list.get(method_num)
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
         data_set, max_clust_size, metadata)
-    # print(cluster_stats)
-
-    # Could be parallelized in the future
-
-    # variable holding all the keys (accession numbers) for corresponding clusters
-    keys = list(seq_dict.keys())
-    # values = list(cluster_dict.values())
-    # seq dict keys have to be in same order as cluster dict keys (see above)
-    labels = [cluster_dict[x] for x in seq_dict.keys()]
+    labels, seqs_length = [], []
+    applab, appsl = labels.append, seqs_length.append
+    for accession, sequence in seq_dict.items():
+        applab(cluster_dict[accession])
+        appsl(len(sequence))
     out_fn = results_path.joinpath('labels').resolve()
     np.save(str(out_fn), np.array(labels))
-    seqs_length = [len(seq_dict[keys[i]].seq) for i in range(total_seq)]
     med_len = np.median(seqs_length)
-    print('Mean seq length: ' + str(med_len))
-    fft_output_list = []
-    abs_fft_output_list = []
-    cgr_output_list = []
+    print(f'Mean seq length: {med_len}')
     seq_new_list = []
     seq_list = []
-    print('Run_name', run_name, '\nMethod:', method, k_val, '\nMean seq length: ' + str(med_len),
-          '\nCluster sizes:' + str(cluster_stats), file=open(results_path.joinpath('Run_data.txt'), 'x'))
+    with open(results_path.joinpath('Run_data.txt'), 'x') as log:
+        log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: '
+                  f'{k_val}\nMedian seq length: {med_len}\nCluster '
+                  f'sizes:{cluster_stats}')
 
-    print('Generating numerical sequences, applying DFT, computing magnitude spectra .... \n')
+    print('Generating numerical sequences, applying DFT, computing '
+          'magnitude spectra .... \n')
 
-    pool = Pool()
     if method_num == 14 or method_num == 15 or method_num == 16:
-        for abs_fft_output, fft_output, cgr_output in pool.map(
-                partial(compute_cgr, seq_dict=seq_dict, keys=keys, method_num=method_num, k_val=k_val,
-                        Result_path=results_path), range(total_seq)):
-            abs_fft_output_list.append(abs_fft_output)
-            fft_output_list.append(fft_output)
-            cgr_output_list.append(cgr_output)
-    else:
-        for abs_fft_output, fft_output in pool.map(
-                partial(one_dimensional_num_mapping_wrapper, method=method, seq_dict=seq_dict, keys=keys,
-                        med_len=med_len, Result_path=results_path), range(total_seq)):
-            abs_fft_output_list.append(abs_fft_output)
-            fft_output_list.append(fft_output)
-    pool.close()
+        abs_fft_output, fft_output, cgr_output = zip(*Parallel(
+            n_jobs=args.cpus)(delayed(compute_cgr)(
+            sequence, method_num, k_val, results_path, args.order)
+                              for name, sequence in seq_dict.items()))
+
+    with Pool(args.cpus) as pool:
+        if method_num == 14 or method_num == 15 or method_num == 16:
+            abs_fft_output, fft_output, cgr_output = zip(*pool.map(partial(
+                compute_cgr, seq_dict=seq_dict, keys=seq_dict.keys(),
+                method_num=method_num, k_val=k_val, results_path=results_path
+            ), range(total_seq)))
+        else:
+            abs_fft_output, fft_output = zip(*pool.map(partial(
+                one_dimensional_num_mapping_wrapper, method=method,
+                seq_dict=seq_dict, keys=seq_dict.keys(), med_len=med_len,
+                result_path=results_path), range(total_seq)))
 
     if method_num == 14 or method_num == 15:
-        plt.matshow(cgr_output_list[0], cmap=cm.gray_r)
+        plt.matshow(cgr_output[0], cmap=cm.gray_r)
         plt.xticks([])
         plt.yticks([])
         plt.savefig(results_path.joinpath('cgr_0.png'))
@@ -204,7 +210,7 @@ if __name__ == '__main__':
     print('Building distance matrix')
 
     # # Numpy implementation
-    distance_matrix = (1 - np.corrcoef(abs_fft_output_list)) / 2
+    distance_matrix = (1 - np.corrcoef(abs_fft_output)) / 2
     out_fn = results_path.joinpath('dist_mat').resolve()
     np.save(str(out_fn), distance_matrix)
 
@@ -214,10 +220,12 @@ if __name__ == '__main__':
     le = pe.LabelEncoder()
     le.fit(labels)
     labs = le.transform(labels)
-    scaled_distance_matrix = dimReduction(distance_matrix, n_dim=3, method='pca')
+    scaled_distance_matrix = dimReduction(distance_matrix, n_dim=3,
+                                          method='pca')
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(scaled_distance_matrix[:, 0], scaled_distance_matrix[:, 1], scaled_distance_matrix[:, 2], c=labs)
+    ax.scatter(scaled_distance_matrix[:, 0], scaled_distance_matrix[:, 1],
+               scaled_distance_matrix[:, 2], c=labs)
     plt.savefig(results_path.joinpath('MoDmap.png').resolve)
 
     # Classification
@@ -225,7 +233,8 @@ if __name__ == '__main__':
     folds = 10
     if total_seq < folds:
         folds = total_seq
-    mean_accuracy, accuracy, cmatrix, misClassifiedDict = classify_dismat(distance_matrix, labels, folds, total_seq)
+    mean_accuracy, accuracy, cmatrix, misClassifiedDict = classify_dismat(
+        distance_matrix, labels, folds, total_seq)
     # accuracy,avg_accuracy, clNames, cMat
     # accuracies = [accuracy, avg_accuracy];
     print('\n10X cross validation classifier accuracies', accuracy,
