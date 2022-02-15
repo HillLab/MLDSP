@@ -46,9 +46,14 @@ def preprocessing(data_set: Path, max_clust_size: int, metadata: Path):
     outfn = data_set.joinpath('all_seqs.fasta').resolve()
     cluster_dict = csv2dict(metadata)
     cluster_stats = Counter(cluster_dict.values())
-    for file in data_set.glob('*'):
-        with open(file) as infile, open(outfn, 'a') as outfile:
-            outfile.write(f'{infile.read().strip()}\n')
+    if outfn.exists():
+        print(f'File {outfn} exists and will be used! If this is '
+              f'unintended, please remove the file')
+    else:
+        for file in data_set.glob('*'):
+            if file.suffix != '.fai':
+                with open(file) as infile, open(outfn, 'a') as outfile:
+                    outfile.write(f'{infile.read().strip()}\n')
     seq_dict = Fasta(outfn)
     for key in seq_dict.keys():
         if key not in cluster_dict:
