@@ -1,32 +1,35 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from joblib import dump, load
-from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.datasets import make_classification
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, plot_confusion_matrix
-from sklearn.pipeline import make_pipeline
-from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.neighbors import KNeighborsClassifier
 from collections import defaultdict
 
-def classify_dismat(dismat, alabels, folds, total, saveModels=False):
+import numpy as np
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.model_selection import StratifiedKFold
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 
+
+def classify_dismat(dismat, alabels, folds, total, saveModels=False):
     kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
-    model_names = {'LinearDiscriminant':LinearDiscriminantAnalysis() #matlab doesn't specify what solver it uses, orginal code used (shrinkage) gamma=0 
-                   ,'LinearSVM':SVC(kernel='linear',cache_size=1000,decision_function_shape='ovo'), 'QuadSVM':SVC(kernel='poly', degree=2,cache_size=1000,decision_function_shape='ovo'),
-                   'KNN':KNeighborsClassifier(n_neighbors=1, leaf_size=50, metric='euclidean', weights='uniform', algorithm='brute')
+    model_names = {'LinearDiscriminant': LinearDiscriminantAnalysis()
+                   # matlab doesn't specify what solver it uses, orginal code used (shrinkage) gamma=0
+        , 'LinearSVM': SVC(kernel='linear', cache_size=1000, decision_function_shape='ovo'),
+                   'QuadSVM': SVC(kernel='poly', degree=2, cache_size=1000, decision_function_shape='ovo'),
+                   'KNN': KNeighborsClassifier(n_neighbors=1, leaf_size=50, metric='euclidean', weights='uniform',
+                                               algorithm='brute')
                    }
     # use 2 additional classifiers if <= 2000 sequences
     # if total <= 2000:
     #     model_names['SubspaceDiscriminant'] = SVC(kernel='rbf')
     #     model_names['SubspaceKNN'] = None
 
-    accuracies = defaultdict(list) # dictionary with key: modelname, value: list containing accuracies
-    confMatrixDict = defaultdict(list) # dictionary with key: modelname, value: list containing confusion matrix displays
-    misclassifiedIdx = defaultdict(list) # dictionary with key: modelname, value: list containing indices/sequences of dismat that have been misclassifed
+    accuracies = defaultdict(list)  # dictionary with key: modelname, value: list containing accuracies
+    confMatrixDict = defaultdict(
+        list)  # dictionary with key: modelname, value: list containing confusion matrix displays
+    misclassifiedIdx = defaultdict(
+        list)  # dictionary with key: modelname, value: list containing indices/sequences of dismat that have been misclassifed
 
     # Loop through each model
     for modelName in model_names:

@@ -173,15 +173,6 @@ def num_mapping_Codons(sq):
               'TAA','TAG','TGA','TGT','TGC','TGG','CCT','CCC','CCA','CCG','CAT','CAC','CAA','CAG','CGT','CGC',
               'CGA','CGG','AGA','AGG','ATT','ATC','ATA','ATG','ACT','ACC','ACA','ACG','AAT','AAC','AAA','AAG',
               'GTT','GTC','GTA','GTG','GCT','GCC','GCA','GCG','GAT','GAC','GAA','GAG','GGT','GGC','GGA','GGG']
-    # for k in range(0, length):
-    #     if k < length-1:
-    #         t = sq[k:k+3]
-    #     elif k == length-1:
-    #         t = sq[k:k+2] + sq[0]
-    #     else:
-    #         t = sq[k] + sq[0:2]
-    #     tp = codons.index(t)
-    #     numSeq[k] = tp
     for idx in range(length):
         if idx <= (length-3):
             t = sq[idx:idx+3]

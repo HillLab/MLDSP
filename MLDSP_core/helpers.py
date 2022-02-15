@@ -1,8 +1,10 @@
-import math, sys
-import numpy as np
+import math
+import sys
 from statistics import median, mean
-from mpl_toolkits import mplot3d
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def length_calc(seq_list):
     """calculates length stats
