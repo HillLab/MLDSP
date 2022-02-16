@@ -74,7 +74,6 @@ def main(args: Namespace):
 
     print('Building distance matrix')
 
-    # # Numpy implementation
     distance_matrix = (1 - np.corrcoef(abs_fft_output)) / 2
     out_fn = results_path.joinpath('dist_mat').resolve()
     np.save(str(out_fn), distance_matrix)
@@ -95,13 +94,9 @@ def main(args: Namespace):
 
     # Classification
     print('Performing classification .... \n')
-    folds = 10
-    if total_seq < folds:
-        folds = total_seq
+    folds = args.folds if total_seq > args.folds else total_seq
     mean_accuracy, accuracy, cmatrix, misClassifiedDict = classify_dismat(
-        distance_matrix, labels, folds, total_seq)
-    # accuracy,avg_accuracy, clNames, cMat
-    # accuracies = [accuracy, avg_accuracy];
+        distance_matrix, labels, folds)
     print('\n10X cross validation classifier accuracies', accuracy,
           file=open(results_path.joinpath('Run_data.txt'), 'a'))
     print('**** Processing completed ****\n')
@@ -142,6 +137,8 @@ if __name__ == '__main__':
     opt.add_argument('--method', '-m', default=14, type=int,
                      help='Numeric representation of method (see more in'
                           ' the documentation)')
+    opt.add_argument('--folds', '-f', default=10, type=int,
+                     help='Number of folds for cross-validation')
 
     args = opt.parse_args()
 

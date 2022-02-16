@@ -1,3 +1,6 @@
+"""
+Setup file for MLDSP_core
+"""
 from pathlib import Path
 
 from setuptools import setup, find_packages
@@ -19,6 +22,7 @@ setup(
     url='https://github.com/HillLab/MLDSP',
     license='GNU',
     author='Daniel Olteanu, Jose Sergio Hleap',
+    # ADD other authors if required
     author_email='dolteanu@uwo.ca, jshleap@sharcnet.ca',
     description='Machine Learning with Digital Signal Processing',
     python_requires='>=3.7',
