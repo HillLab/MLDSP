@@ -98,7 +98,6 @@ def compute_cgr(seq: FastaRecord, results: Path, kmer: int = 5,
     """
     seq_new = str(seq)
     name = seq.name
-    # Replace complementary Purine/Pyrimidine
     if pyrimidine:
         seq_new = seq_new.replace('G', 'A').replace('C', 'T')
     cgr_raw = cgr(seq_new, order, kmer)
@@ -106,10 +105,9 @@ def compute_cgr(seq: FastaRecord, results: Path, kmer: int = 5,
         cgr_out = cgr_raw[-1, :]
     else:
         cgr_out = cgr_raw
-    # shape:[2^k, 2^k] # may not be appropriate to take by column
     out_filename = str(results.joinpath(
         'Num_rep', f'cgr_k={kmer}_{name}').resolve())
     np.save(out_filename, cgr_out)
     fft_out = fft.fft(cgr_out, axis=0)
     abs_fft_out = np.abs(fft_out.flatten())
-    return abs_fft_out, fft_out, cgr_out  # flatted into 1d array
+    return abs_fft_out, fft_out, cgr_out

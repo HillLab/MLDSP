@@ -1,9 +1,18 @@
+"""
+@Daniel
+"""
+
+from typing import Union
+
+from numpy import ndarray
+from skbio.stats.distance import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 
-def dimReduction(data, n_dim, method):
+def dimReduction(data: Union[ndarray, DistanceMatrix], n_dim: int,
+                 method: str) -> ndarray:
     """
     Function will take in a nxm 2d-array and reduce the dimensions of the data using a specified dimensionality
     reduction technique (PCA, MDS, or TSNE).
@@ -13,10 +22,10 @@ def dimReduction(data, n_dim, method):
     :return np.array transformed: nxn_dim array of tranformed data
     """
     if method == 'pca':
-        pca = PCA(n_components=n_dim,svd_solver='full')
+        pca = PCA(n_components=n_dim, svd_solver='full')
         transformed = pca.fit_transform(data)
         return transformed
-    #Not working should be same mds algorithm as matlab
+    # Not working should be same mds algorithm as matlab
     elif method == 'mds':
         mds = pcoa(data, number_of_dimensions=n_dim)
         transformed = mds.samples

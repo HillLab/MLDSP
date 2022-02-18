@@ -2,6 +2,7 @@
 @Daniel
 """
 from collections import defaultdict
+from functools import partial
 
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -38,22 +39,22 @@ def classify_dismat(dismat, alabels, folds):
             n_neighbors=1, leaf_size=50, metric='euclidean',
             weights='uniform', algorithm='brute'))
     }
-
+    n_classes = np.unique(alabels).shape[0]
     accuracies = defaultdict(list)
     conf_matrix_dict = defaultdict(list)
     misclassified_idx = defaultdict(list)
     mean_model_accuracies = defaultdict(float)
-    aggregated_c_matrix = defaultdict(np.array)
+    aggregated_c_matrix = defaultdict(partial(np.zeros,
+                                              (n_classes, n_classes)))
     kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
     best_model = defaultdict(lambda: (Pipeline, 0.0))
-    for model_name, pipe_model in pipes.items():
-        print(model_name)
-        for i, (train_index, test_index) in enumerate(kf.split(
-                dismat, alabels)):
-            x_train = dismat[train_index]
-            x_test = dismat[test_index]
-            y_train = [alabels[j] for j in train_index]
-            y_test = [alabels[j] for j in test_index]
+
+    for i, (train_index, test_index) in enumerate(kf.split(
+            dismat, alabels)):
+        x_train, y_train = dismat[train_index], alabels[train_index]
+        x_test, y_test = dismat[test_index], alabels[test_index]
+        print(f"Computing fold {i}")
+        for model_name, pipe_model in pipes.items():
             pipe_model.fit(x_train, y_train)
             prediction = pipe_model.predict(x_test)
             acc = accuracy_score(y_test, prediction)
@@ -61,13 +62,12 @@ def classify_dismat(dismat, alabels, folds):
                 best_model[model_name] = (pipe_model, acc)
             accuracies[model_name].append(acc)
             mean_model_accuracies[model_name] += acc
-            print(f'Accuracy of fold {i} = {acc}')
+            print(f'\tAccuracy of {model_name} = {acc}')
             cm = confusion_matrix(y_test, prediction,
                                   labels=list(np.unique(alabels)),
                                   normalize=None)
             conf_matrix_dict[model_name].append(cm)
             aggregated_c_matrix[model_name] += cm
-
             # Store indices (of dismat) of misclassified sequences
             misclassified_idx[model_name].append(np.where(
                 y_test == prediction)[0])
@@ -75,6 +75,7 @@ def classify_dismat(dismat, alabels, folds):
     # Mean accuracy value across all classifiers
     avg_accuracy = sum(mean_model_accuracies.values()) / (folds * len(
         mean_model_accuracies))
+    print(f"Average accuracy over all classifiers {avg_accuracy}")
 
     return avg_accuracy, mean_model_accuracies, aggregated_c_matrix, \
            misclassified_idx, best_model

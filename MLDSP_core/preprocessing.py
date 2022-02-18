@@ -22,7 +22,7 @@ def csv2dict(infile: Path) -> Dict[str, str]:
     return dictionary
 
 
-def preprocessing(data_set: Path, max_clust_size: int, metadata: Path):
+def preprocessing(data_set: Path, metadata: Path):
     """
     TODO: update these doc strings
     Preprocessing of fasta sequences using BioPython into a database of
@@ -54,10 +54,11 @@ def preprocessing(data_set: Path, max_clust_size: int, metadata: Path):
             if file.suffix != '.fai':
                 with open(file) as infile, open(outfn, 'a') as outfile:
                     outfile.write(f'{infile.read().strip()}\n')
-    seq_dict = Fasta(outfn)
-    for key in seq_dict.keys():
-        if key not in cluster_dict:
-            raise Exception(f"Your metadata and a your fasta don't match,"
-                            f" check your input\nCulprit {key}")
+    seq_dict = Fasta(str(outfn))
+    difference = set(cluster_dict.keys()).difference(seq_dict.keys())
+    if difference:
+        raise Exception(f"Your metadata and a your fasta don't match,"
+                        f" check your input\nCulprit(s) "
+                        f"{''.join(difference)}")
     total_seq = len(seq_dict.keys())
     return seq_dict, total_seq, cluster_dict, cluster_stats

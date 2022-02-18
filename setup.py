@@ -18,7 +18,8 @@ with open(readme, encoding='utf-8') as readm, open(reqs) as requ:
 setup(
     name='MLDSP',
     version=version,
-    packages=find_packages() + ['MLDSP_core'],
+    packages=find_packages(),
+    # package_dir={"": "MLDSP"},
     url='https://github.com/HillLab/MLDSP',
     license='GNU',
     author='Daniel Olteanu, Jose Sergio Hleap',

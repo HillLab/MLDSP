@@ -214,7 +214,7 @@ def num_mapping_Doublet(sq: ndarray) -> ndarray:
 
 def one_dimensional_num_mapping_wrapper(
         seq: FastaRecord, method: Callable, results_path: Path,
-        med_len: int = 100) -> Tuple[Any, Any, None]:
+        med_len: int = 100, **kwargs) -> Tuple[Any, Any, None]:
     """
     @Daniel
     Args:
