@@ -6,7 +6,6 @@ from string import ascii_uppercase
 from typing import Callable, Tuple, Any
 
 from numpy import ndarray, array, vectorize, where, zeros, save, abs
-from pyfaidx import FastaRecord
 from pywt import pad
 from scipy import fft
 
@@ -213,7 +212,7 @@ def num_mapping_Doublet(sq: ndarray) -> ndarray:
 
 
 def one_dimensional_num_mapping_wrapper(
-        seq: FastaRecord, method: Callable, results_path: Path,
+        seq: str, name: str, method: Callable, results_path: Path,
         med_len: int = 100, **kwargs) -> Tuple[Any, Any, None]:
     """
     @Daniel
@@ -228,7 +227,6 @@ def one_dimensional_num_mapping_wrapper(
     """
     # normalize sequences to median seq length of cluster
     seq_new = str(seq).upper()
-    name = seq.name
     if len(seq_new) >= med_len:
         seq_new = seq_new[0:round(med_len)]
     num_seq = method(array(list(seq_new)))

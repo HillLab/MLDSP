@@ -19,7 +19,7 @@ setup(
     name='MLDSP',
     version=version,
     packages=find_packages(),
-    # package_dir={"": "MLDSP"},
+    scripts=['bin/MLDSP_core'],
     url='https://github.com/HillLab/MLDSP',
     license='GNU',
     author='Daniel Olteanu, Jose Sergio Hleap',

@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Tuple, Any
 
 import numpy as np
-from pyfaidx import FastaRecord
 from scipy import fft
 
 
@@ -46,12 +45,13 @@ def cgr(chars: str, order: str = "ACGT", k: int = 6):
     return chaos
 
 
-def PuPyCGR(seq: FastaRecord, kmer: int, results: Path,
-            order: str = 'ACGT') -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature)
+def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
+            order: str = 'ACGT', **kwargs) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature)
     """
     Wrapper of CGR to compute PuPyCGR
     Args:
-        seq: FastaRecord instance with the sequence and name of the sequence
+        seq: sequence string
+        name: name of the sequence being analysed
         kmer: Kmer value to use
         results: Path to the results folder
         order: Order of the nucleotides in the Chaos square
@@ -59,16 +59,17 @@ def PuPyCGR(seq: FastaRecord, kmer: int, results: Path,
 
     Returns:
     """
-    return compute_cgr(seq=seq, kmer=kmer, results=results, order=order,
-                       pyrimidine=True)
+    return compute_cgr(seq=seq, name=name, kmer=kmer, results=results,
+                       order=order, pyrimidine=True)
 
 
-def oneDPuPyCGR(seq: FastaRecord, kmer: int, results: Path,
-                order: str = 'ACGT') -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature)
+def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
+                order: str = 'ACGT', **kwargs) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature)
     """
     Wrapper of CGR to compute 1DPuPyCGR
     Args:
-        seq: FastaRecord instance with the sequence and name of the sequence
+        seq: sequence string
+        name: name of the sequence being analysed
         kmer: Kmer value to use
         results: Path to the results folder
         order: Order of the nucleotides in the Chaos square
@@ -76,11 +77,11 @@ def oneDPuPyCGR(seq: FastaRecord, kmer: int, results: Path,
 
     Returns:
     """
-    return compute_cgr(seq=seq, kmer=kmer, results=results, order=order,
-                       pyrimidine=True, last_only=True)
+    return compute_cgr(seq=seq, name=name, kmer=kmer, results=results,
+                       order=order, pyrimidine=True, last_only=True)
 
 
-def compute_cgr(seq: FastaRecord, results: Path, kmer: int = 5,
+def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 order: str = 'ACGT', pyrimidine: bool = False,
                 last_only: bool = False, **kwargs) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature
     """
@@ -88,7 +89,8 @@ def compute_cgr(seq: FastaRecord, results: Path, kmer: int = 5,
     Args:
         last_only: takes only the last (bottom) row but all columns of cgr to make 1DPuPyCGR
         pyrimidine: Replace purine for pyrimidines (PuPyCGR, 1DPuPyCGR)
-        seq: FastaRecord instance with the sequence and name of the sequence
+        seq: sequence string
+        name: name of the sequence
         kmer: Kmer value to use
         results: Path to the results folder
         order: Order of the nucleotides in the Chaos square
@@ -96,8 +98,7 @@ def compute_cgr(seq: FastaRecord, results: Path, kmer: int = 5,
     Returns:
 
     """
-    seq_new = str(seq)
-    name = seq.name
+    seq_new = seq
     if pyrimidine:
         seq_new = seq_new.replace('G', 'A').replace('C', 'T')
     cgr_raw = cgr(seq_new, order, kmer)

@@ -58,7 +58,7 @@ def main(arguments: Namespace):
           'magnitude spectra .... \n')
 
     parallel_results = Parallel(n_jobs=arguments.cpus)(delayed(compute)(
-        seq=seq_dict[name], results=results_path, order=arguments.order,
+        seq=str(seq_dict[name]), name=name, results=results_path, order=arguments.order,
         kmer=k_val, med_len=med_len, method=method) for name in names)
 
     abs_fft_output, fft_output, cgr_output = zip(*parallel_results)
