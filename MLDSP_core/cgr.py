@@ -4,13 +4,13 @@ the sequence is in standard ACTG, with no missing values (N), modified
 nucleotides or uracil
 """
 from pathlib import Path
-from typing import Tuple, Any
+from typing import Tuple
 
-import numpy as np
+from numpy import ndarray, zeros, save, abs
 from scipy import fft
 
 
-def cgr(chars: str, order: str = "ACGT", k: int = 6):
+def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
     """
     computes CGR representation in standard format: C top-left,
     G top-right, A bottom-left, T bottom-right
@@ -21,7 +21,7 @@ def cgr(chars: str, order: str = "ACGT", k: int = 6):
     """
     size = 2 ** k
     mid_cgr = 2 ** (k - 1)
-    chaos = np.zeros((size, size))
+    chaos = zeros((size, size))
     # set starting point of cgr plotting in the middle of cgr (x,y)
     x = y = mid_cgr
 
@@ -46,7 +46,8 @@ def cgr(chars: str, order: str = "ACGT", k: int = 6):
 
 
 def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
-            order: str = 'ACGT', **kwargs) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature)
+            order: str = 'ACGT', **kwargs
+            ) -> Tuple[ndarray, ndarray, ndarray]:
     """
     Wrapper of CGR to compute PuPyCGR
     Args:
@@ -64,7 +65,8 @@ def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
 
 
 def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
-                order: str = 'ACGT', **kwargs) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature)
+                order: str = 'ACGT', **kwargs
+                ) -> Tuple[ndarray, ndarray, ndarray]:
     """
     Wrapper of CGR to compute 1DPuPyCGR
     Args:
@@ -83,7 +85,8 @@ def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
 
 def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 order: str = 'ACGT', pyrimidine: bool = False,
-                last_only: bool = False, **kwargs) -> Tuple[Any, Any, Any]:  # TODO change any for the actual signature
+                last_only: bool = False, **kwargs
+                ) -> Tuple[ndarray, ndarray, ndarray]:
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:
@@ -108,7 +111,7 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
         cgr_out = cgr_raw
     out_filename = str(results.joinpath(
         'Num_rep', f'cgr_k={kmer}_{name}').resolve())
-    np.save(out_filename, cgr_out)
+    save(out_filename, cgr_out)
     fft_out = fft.fft(cgr_out, axis=0)
-    abs_fft_out = np.abs(fft_out.flatten())
+    abs_fft_out = abs(fft_out.flatten())
     return abs_fft_out, fft_out, cgr_out
