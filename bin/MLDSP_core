@@ -2,10 +2,11 @@
 """
 TBD @DANIEL
 """
-from MLDSP_core.main import main
+from MLDSP_core.main import startCalcProcess
 from argparse import Action, ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
 from joblib import cpu_count
+
 
 if __name__ == '__main__':
     class PathAction(Action):
@@ -51,4 +52,4 @@ if __name__ == '__main__':
 
     args = opt.parse_args()
 
-    main(args)
+    startCalcProcess(args)

@@ -3,6 +3,7 @@ TBD @DANIEL
 """
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, \
     Action, Namespace
+from json import dumps
 from os import getenv
 from pathlib import Path
 from shutil import rmtree
@@ -11,17 +12,16 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 from joblib import Parallel, delayed, cpu_count
-from sklearn import preprocessing as pe
 
 from MLDSP_core.__constants__ import methods_list
-from MLDSP_core.classification import classify_dismat
+from MLDSP_core.classification import classify_dismat, calcInterclustDist
 from MLDSP_core.one_dimensional_num_mapping import \
     one_dimensional_num_mapping_wrapper
 from MLDSP_core.preprocessing import preprocessing
-from MLDSP_core.visualisation import dimReduction
+from MLDSP_core.visualisation import plotCGR, plot3d
 
 
-def main(arguments: Namespace):
+def startCalcProcess(arguments: Namespace):
     """
     @Daniel
     Args:
@@ -43,6 +43,9 @@ def main(arguments: Namespace):
         else method
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
         data_set, metadata)
+    if args.query_seq_path is not None:
+        q_seqs, q_nseq, _, _ = preprocessing(args.query_seq_path, None,
+                                             prefix='Query')
     names, labels, seqs_length = zip(*[(a, cluster_dict[a], len(b))
                                        for a, b in seq_dict.items()])
     out_fn = results_path.joinpath('labels').resolve()
@@ -58,8 +61,9 @@ def main(arguments: Namespace):
           'magnitude spectra .... \n')
 
     parallel_results = Parallel(n_jobs=arguments.cpus)(delayed(compute)(
-        seq=str(seq_dict[name]), name=name, results=results_path, order=arguments.order,
-        kmer=k_val, med_len=med_len, method=method) for name in names)
+        seq=str(seq_dict[name]), name=name, results=results_path,
+        order=arguments.order, kmer=k_val, med_len=med_len,
+        method=method) for name in names)
 
     abs_fft_output, fft_output, cgr_output = zip(*parallel_results)
 
@@ -74,32 +78,50 @@ def main(arguments: Namespace):
 
     distance_matrix = (1 - np.corrcoef(abs_fft_output)) / 2
     out_fn = results_path.joinpath('dist_mat').resolve()
-    np.save(str(out_fn), distance_matrix)
+    if not args.to_json:
+        np.save(str(out_fn), distance_matrix)
 
-    print('Scaling & data visualisation')
-    # TODO Include what is in webapp
-    le = pe.LabelEncoder()
-    le.fit(labels)
-    labs = le.transform(labels)
-    scaled_distance_matrix = dimReduction(distance_matrix, n_dim=3,
-                                          method='pca')
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(scaled_distance_matrix[:, 0], scaled_distance_matrix[:, 1],
-               scaled_distance_matrix[:, 2], c=labs)
-    plt.savefig(results_path.joinpath('MoDmap.png').resolve())
-
-    # Classification
     print('Performing classification .... \n')
+
     folds = arguments.folds if total_seq > arguments.folds else total_seq
     mean_accuracy, accuracy, cmatrix, mis_classified_dict, \
     best_model = classify_dismat(distance_matrix, np.array(labels),
                                  folds)
+    confMatrixLabels = np.unique(labels).tolist()
+
+    print('Scaling & data visualisation...')
+    viz_path = results_path.joinpath('Images').resolve()
+    if not args.to_json:
+        viz_path.mkdir(parents=True, exist_ok=True)
+    # CGR plotting
+    if cgr_output:
+        out = viz_path.joinpath('CGR.png')
+        cgr_img_data = plotCGR(cgr_output, out=out, to_json=args.to_json)
+    else:
+        cgr_img_data = None
+
+    # 3d ModMap plotting
+    mds = viz_path.joinpath('Dim_redux.png')
+    mds_img_data = plot3d(distance_matrix, labels, out=mds,
+                          dim_res_method=args.dim_reduction,
+                          to_json=args.to_json)
+
+    # Get intercluster distances
+    intercluster_dist, cluster_labels = calcInterclustDist(
+        distance_matrix, labels, cluster_dict)
     with open(results_path.joinpath('Run_data.txt'), 'a') as out:
         outline = f'\n10X cross validation classifier accuracies:\n'
         outline += "\n".join([f"\t{m}: {ac}" for m, ac in accuracy.items()])
         out.write(outline)
+
+    print('Processing completed')
     print('**** Processing completed ****\n')
+    if args.to_json:
+        return dumps({
+            'mds': mds_img_data, 'cgr': cgr_img_data, 'cMatrix': cmatrix,
+            'cMatrixLabels': confMatrixLabels, 'modelAcc': accuracy,
+            'interclusterDist': intercluster_dist,
+            'clusterLabels': cluster_labels})
 
 
 if __name__ == '__main__':
@@ -125,6 +147,8 @@ if __name__ == '__main__':
                                           ' models with', action=PathAction)
     opt.add_argument('training_labels', help='CSV with the mapping of '
                                              'labels and sequence names')
+    opt.add_argument('--query_seq_path', '-q', action=PathAction,
+                     default=None, help='Path to test set fasta(s)')
     opt.add_argument('--run_name', '-r', help='Name of the run',
                      default='Bacteria')
     opt.add_argument('--output_directory', '-o', default=Path(),
@@ -143,7 +167,12 @@ if __name__ == '__main__':
                      help='Number of folds for cross-validation')
     opt.add_argument('--to_json', '-j', default=False, action='store_true',
                      help='Number of folds for cross-validation')
+    opt.add_argument('--dim_reduction', '-i', default='pca',
+                     choices=['pca', 'mds', 'tsne'],
+                     help='Type of dimensionality reduction technique to'
+                          ' use in the visualization of the distance '
+                          'matrix.')
 
     args = opt.parse_args()
 
-    main(args)
+    startCalcProcess(args)
