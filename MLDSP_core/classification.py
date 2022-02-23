@@ -3,6 +3,7 @@
 """
 from collections import defaultdict
 from functools import partial
+from itertools import product, combinations
 
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -96,3 +97,46 @@ def displayConfusionMatrix(confMatrix, alabels):
         confusion_matrix=confMatrix, display_labels=list(np.unique(alabels)))
     confMatrixDisplayObj.plot(cmap='Blues', colorbar=False)
     return confMatrixDisplayObj
+
+
+def calcInterclustDist(distMatrix, labels, cluster_dict):
+    """
+    @ Daniel
+    Args:
+        distMatrix:
+        labels:
+        cluster_dict:
+
+    Returns:
+
+    """
+    seqClusterIndices = []  # index corresponds to cluster #, and each index holds list containing indices of sequences belonging to that cluster
+    clusterLabels = list(cluster_dict.keys())  # convert to list
+    for clusterName in clusterLabels:
+        seqClusterIndices.append([
+            idx for idx, seqClustName in enumerate(labels) if
+            seqClustName == clusterName])
+    interdistDict = defaultdict(dict)  # dict to store distances between each cluster
+    for clusterComb in list(combinations(range(len(clusterLabels)), 2)):
+        clustIndices1 = seqClusterIndices[clusterComb[0]]
+        clustIndices2 = seqClusterIndices[clusterComb[1]]
+
+        tempDistances = [distMatrix[idxComb[0]][idxComb[1]] for idxComb in
+                         product(clustIndices2, clustIndices1)]
+        interdistDict[clusterLabels[clusterComb[0]]][clusterLabels[clusterComb[1]]] = np.mean(
+            tempDistances)
+        interdistDict[clusterLabels[clusterComb[1]]][clusterLabels[clusterComb[0]]] = np.mean(
+            tempDistances)
+    # make cluster distances to itself 0
+    for cluster in interdistDict.keys():
+        interdistDict.get(cluster)[cluster] = 0
+
+    # Format interdistdict
+    interdistDictFormatted = {}
+    for clustLabel in clusterLabels:
+        orderedTempList = []
+        for clustLabelTarget in clusterLabels:
+            orderedTempList.append(round(interdistDict.get(clustLabel).get(clustLabelTarget), 4))
+        interdistDictFormatted[clustLabel] = orderedTempList
+
+    return interdistDictFormatted, clusterLabels
