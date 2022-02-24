@@ -19,7 +19,7 @@ def classify_dismat(dismat, alabels, folds):
     """
     @Daniel
     Args:
-        dismat:
+        dismat: 
         alabels:
         folds:
 
@@ -53,7 +53,7 @@ def classify_dismat(dismat, alabels, folds):
             dismat, alabels)):
         x_train, y_train = dismat[train_index], alabels[train_index]
         x_test, y_test = dismat[test_index], alabels[test_index]
-        print(f"Computing fold {i}")
+        print(f"Computing fold {i+1}")
         for model_name, pipe_model in pipes.items():
             pipe_model.fit(x_train, y_train)
             prediction = pipe_model.predict(x_test)
