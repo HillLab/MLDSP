@@ -28,7 +28,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
     """
     @Daniel
     Args:
-        dismat:
+        dismat: 
         alabels:
         folds:
 

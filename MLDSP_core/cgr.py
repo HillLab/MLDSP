@@ -83,14 +83,14 @@ def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
                        order=order, pyrimidine=True, last_only=True)
 
 
-def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
+def  compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 order: str = 'ACGT', pyrimidine: bool = False,
                 last_only: bool = False, **kwargs
                 ) -> Tuple[ndarray, ...]:
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:
-        last_only: takes only the last (bottom) row but all columns of cgr to make 1DPuPyCGR
+        last_only: takes only the last (bottom) row but all columns of cgr to make a 1
         pyrimidine: Replace purine for pyrimidines (PuPyCGR, 1DPuPyCGR)
         seq: sequence string
         name: name of the sequence
