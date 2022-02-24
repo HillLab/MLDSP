@@ -1,5 +1,5 @@
 """
-Setup file for MLDSP_core
+Setup file for MLDSP
 """
 from pathlib import Path
 
@@ -19,7 +19,7 @@ setup(
     name='MLDSP',
     version=version,
     packages=find_packages(),
-    scripts=['bin/MLDSP_core'],
+    scripts=['bin/MLDSP'],
     url='https://github.com/HillLab/MLDSP',
     license='GNU',
     author='Daniel Olteanu, Jose Sergio Hleap',
