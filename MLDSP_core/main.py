@@ -108,6 +108,7 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
     full_model = classify_dismat(distance_matrix, array(labels),
                                  folds)
     cm_labels = unique(labels).tolist()
+    q_preds = None
     if q_names is not None:
         print('Running query on trained models')
         q_preds = {model_name: model.predict(q_distance_matx)
