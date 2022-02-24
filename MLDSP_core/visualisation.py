@@ -5,7 +5,7 @@ from base64 import b64encode
 from io import BytesIO
 from json import dumps
 from pathlib import Path
-from typing import Union
+from typing import Union, DefaultDict, List, Dict
 
 from matplotlib import cm
 from matplotlib.figure import Figure
@@ -14,6 +14,7 @@ from pandas import DataFrame
 from plotly import express as px
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE, MDS
+from sklearn.metrics import ConfusionMatrixDisplay
 
 
 def dimReduction(data: ndarray, n_dim: int, method: str) -> ndarray:
@@ -40,12 +41,14 @@ def dimReduction(data: ndarray, n_dim: int, method: str) -> ndarray:
         return transformed
 
 
-def plotCGR(cgr_output: ndarray, out: Path = Path('CGR.png'),
-            to_json: bool = False) -> Union[None, b64encode]:
+def plotCGR(cgr_output: ndarray, sample_id: int = 0,
+            out: Path = Path('CGR.png'), to_json: bool = False
+            ) -> Union[None, b64encode]:
     """
     returns base64 encode of CGR image
 
     Args:
+        sample_id: Index of the sample to render
         out: Path for output
         to_json: Dump figure to json
         cgr_output: Firsr CGR matrix
@@ -54,7 +57,7 @@ def plotCGR(cgr_output: ndarray, out: Path = Path('CGR.png'),
     """
     cgrFig = Figure()
     ax = cgrFig.subplots()
-    ax.matshow(cgr_output, cmap=cm.gray_r)
+    ax.matshow(cgr_output[sample_id], cmap=cm.gray_r)
     ax.set_xticks([])
     ax.set_yticks([])
     buf = BytesIO() if to_json else out
@@ -95,3 +98,23 @@ def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
         return fig.to_json()
     else:
         fig.write_image(out)
+
+
+def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
+                           alabels: List[str]
+                           ) -> Dict[str, ConfusionMatrixDisplay]:
+    """
+    @Daniel
+    Args:
+        confMatrix:
+        alabels:
+
+    Returns:
+    """
+    conf_matrix_display_objs = {
+        model: ConfusionMatrixDisplay(
+            confusion_matrix=matrix, display_labels=alabels).plot(
+            cmap='Blues', colorbar=False) for model, matrix in
+        confMatrix.items()
+    }
+    return conf_matrix_display_objs

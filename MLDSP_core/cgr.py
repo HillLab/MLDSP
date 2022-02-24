@@ -24,10 +24,10 @@ def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
     chaos = zeros((size, size))
     # set starting point of cgr plotting in the middle of cgr (x,y)
     x = y = mid_cgr
-
     for i in range(len(chars)):
         char = chars[i]
-        # divide x coordinate in half, moving it halfway to the left, this is correct if base is C or A
+        # divide x coordinate in half, moving it halfway to the left,
+        # this is correct if base is C or A
         x //= 2
         # check to see if base is actually a G or T
         if char == order[2] or char == order[3]:
@@ -47,7 +47,7 @@ def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
 
 def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
             order: str = 'ACGT', **kwargs
-            ) -> Tuple[ndarray, ndarray, ndarray]:
+            ) -> Tuple[ndarray, ...]:
     """
     Wrapper of CGR to compute PuPyCGR
     Args:
@@ -66,7 +66,7 @@ def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
 
 def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
                 order: str = 'ACGT', **kwargs
-                ) -> Tuple[ndarray, ndarray, ndarray]:
+                ) -> Tuple[ndarray, ...]:
     """
     Wrapper of CGR to compute 1DPuPyCGR
     Args:
@@ -86,7 +86,7 @@ def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
 def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 order: str = 'ACGT', pyrimidine: bool = False,
                 last_only: bool = False, **kwargs
-                ) -> Tuple[ndarray, ndarray, ndarray]:
+                ) -> Tuple[ndarray, ...]:
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:

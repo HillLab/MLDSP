@@ -3,12 +3,14 @@
 """
 from collections import defaultdict
 from functools import partial
-from itertools import product, combinations
+from itertools import combinations
+from typing import Tuple, Dict, DefaultDict, List
 
-import numpy as np
+from numpy import array, ndarray, where, unique, zeros
+from pandas import DataFrame
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline, Pipeline
@@ -16,7 +18,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 
-def classify_dismat(dismat, alabels, folds):
+# noinspection PyArgumentEqualDefault
+def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
+                    ) -> Tuple[float,
+                               DefaultDict[str, float],
+                               DefaultDict[str, ndarray],
+                               DefaultDict[str, List[ndarray]],
+                               Dict[str, Pipeline]]:
     """
     @Daniel
     Args:
@@ -40,37 +48,32 @@ def classify_dismat(dismat, alabels, folds):
             n_neighbors=1, leaf_size=50, metric='euclidean',
             weights='uniform', algorithm='brute'))
     }
-    n_classes = np.unique(alabels).shape[0]
+    n_classes = unique(alabels).shape[0]
     accuracies = defaultdict(list)
-    conf_matrix_dict = defaultdict(list)
     misclassified_idx = defaultdict(list)
     mean_model_accuracies = defaultdict(float)
-    aggregated_c_matrix = defaultdict(partial(np.zeros,
-                                              (n_classes, n_classes)))
+    aggregated_c_matrix = defaultdict(partial(zeros, (
+        n_classes, n_classes)))
     kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
-    best_model = defaultdict(lambda: (Pipeline, 0.0))
-
-    for i, (train_index, test_index) in enumerate(kf.split(
-            dismat, alabels)):
-        x_train, y_train = dismat[train_index], alabels[train_index]
-        x_test, y_test = dismat[test_index], alabels[test_index]
-        print(f"Computing fold {i}")
-        for model_name, pipe_model in pipes.items():
-            pipe_model.fit(x_train, y_train)
-            prediction = pipe_model.predict(x_test)
+    full_model = {}
+    for model_name, pipe_model in pipes.items():
+        full_model[model_name] = pipe_model.fit(dismat, alabels)
+        for i, (train_index, test_index) in enumerate(kf.split(
+                dismat, alabels)):
+            x_train, y_train = dismat[train_index], alabels[train_index]
+            x_test, y_test = dismat[test_index], alabels[test_index]
+            print(f"Computing fold {i}")
+            fitted = pipe_model.fit(x_train, y_train)
+            prediction = fitted.predict(x_test)
             acc = accuracy_score(y_test, prediction)
-            if best_model[model_name][1] < acc:
-                best_model[model_name] = (pipe_model, acc)
             accuracies[model_name].append(acc)
             mean_model_accuracies[model_name] += acc
             print(f'\tAccuracy of {model_name} = {acc}')
             cm = confusion_matrix(y_test, prediction,
-                                  labels=list(np.unique(alabels)),
+                                  labels=list(unique(alabels)),
                                   normalize=None)
-            conf_matrix_dict[model_name].append(cm)
             aggregated_c_matrix[model_name] += cm
-            # Store indices (of dismat) of misclassified sequences
-            misclassified_idx[model_name].append(np.where(
+            misclassified_idx[model_name].append(where(
                 y_test == prediction)[0])
 
     # Mean accuracy value across all classifiers
@@ -79,64 +82,26 @@ def classify_dismat(dismat, alabels, folds):
     print(f"Average accuracy over all classifiers {avg_accuracy}")
 
     return avg_accuracy, mean_model_accuracies, aggregated_c_matrix, \
-           misclassified_idx, best_model
+           misclassified_idx, full_model
 
 
-def displayConfusionMatrix(confMatrix, alabels):
-    """
-    @Daniel
-    Args:
-        confMatrix:
-        alabels:
-
-    Returns:
-
-    """
-    # generate cm image and plot
-    confMatrixDisplayObj = ConfusionMatrixDisplay(
-        confusion_matrix=confMatrix, display_labels=list(np.unique(alabels)))
-    confMatrixDisplayObj.plot(cmap='Blues', colorbar=False)
-    return confMatrixDisplayObj
-
-
-def calcInterclustDist(distMatrix, labels, cluster_dict):
+def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]) -> str:
     """
     @ Daniel
     Args:
         distMatrix:
         labels:
-        cluster_dict:
 
     Returns:
 
     """
-    seqClusterIndices = []  # index corresponds to cluster #, and each index holds list containing indices of sequences belonging to that cluster
-    clusterLabels = list(cluster_dict.keys())  # convert to list
-    for clusterName in clusterLabels:
-        seqClusterIndices.append([
-            idx for idx, seqClustName in enumerate(labels) if
-            seqClustName == clusterName])
-    interdistDict = defaultdict(dict)  # dict to store distances between each cluster
-    for clusterComb in list(combinations(range(len(clusterLabels)), 2)):
-        clustIndices1 = seqClusterIndices[clusterComb[0]]
-        clustIndices2 = seqClusterIndices[clusterComb[1]]
+    arr = array(labels)
+    un_labels = unique(arr)
+    inter_dist_dict = defaultdict(dict)
+    for i, j in combinations(un_labels, 2):
+        dist = distMatrix[where(arr == i)[0]][:, where(arr == j)[0]
+               ].ravel().mean()
+        inter_dist_dict[i][i] = inter_dist_dict[j][j] = 0
+        inter_dist_dict[i][j] = inter_dist_dict[j][i] = dist
 
-        tempDistances = [distMatrix[idxComb[0]][idxComb[1]] for idxComb in
-                         product(clustIndices2, clustIndices1)]
-        interdistDict[clusterLabels[clusterComb[0]]][clusterLabels[clusterComb[1]]] = np.mean(
-            tempDistances)
-        interdistDict[clusterLabels[clusterComb[1]]][clusterLabels[clusterComb[0]]] = np.mean(
-            tempDistances)
-    # make cluster distances to itself 0
-    for cluster in interdistDict.keys():
-        interdistDict.get(cluster)[cluster] = 0
-
-    # Format interdistdict
-    interdistDictFormatted = {}
-    for clustLabel in clusterLabels:
-        orderedTempList = []
-        for clustLabelTarget in clusterLabels:
-            orderedTempList.append(round(interdistDict.get(clustLabel).get(clustLabelTarget), 4))
-        interdistDictFormatted[clustLabel] = orderedTempList
-
-    return interdistDictFormatted, clusterLabels
+    return DataFrame(inter_dist_dict).to_html()

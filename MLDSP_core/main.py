@@ -7,21 +7,23 @@ from json import dumps
 from os import getenv
 from pathlib import Path
 from shutil import rmtree
+from typing import Optional
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-import numpy as np
 from joblib import Parallel, delayed, cpu_count
+from numpy import corrcoef, save, array, median, unique
 
 from MLDSP_core.__constants__ import methods_list
 from MLDSP_core.classification import classify_dismat, calcInterclustDist
 from MLDSP_core.one_dimensional_num_mapping import \
     one_dimensional_num_mapping_wrapper
 from MLDSP_core.preprocessing import preprocessing
-from MLDSP_core.visualisation import plotCGR, plot3d
+from MLDSP_core.visualisation import plotCGR, plot3d, \
+    displayConfusionMatrix
 
 
-def startCalcProcess(arguments: Namespace):
+def startCalcProcess(arguments: Namespace) -> Optional[str]:
     """
     @Daniel
     Args:
@@ -43,14 +45,19 @@ def startCalcProcess(arguments: Namespace):
         else method
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
         data_set, metadata)
+    q_names = None
     if args.query_seq_path is not None:
+        print(f'Query path set to be {args.query_seq_path}, '
+              f'preprocessing')
         q_seqs, q_nseq, _, _ = preprocessing(args.query_seq_path, None,
                                              prefix='Query')
+        q_names = list(q_seqs.keys())
+
     names, labels, seqs_length = zip(*[(a, cluster_dict[a], len(b))
                                        for a, b in seq_dict.items()])
     out_fn = results_path.joinpath('labels').resolve()
-    np.save(str(out_fn), np.array(labels))
-    med_len = np.median(seqs_length)
+    save(str(out_fn), array(labels))
+    med_len = median(seqs_length)
     print(f'Mean seq length: {med_len}')
     with open(results_path.joinpath('Run_data.txt'), 'x') as log:
         log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: '
@@ -66,6 +73,16 @@ def startCalcProcess(arguments: Namespace):
         method=method) for name in names)
 
     abs_fft_output, fft_output, cgr_output = zip(*parallel_results)
+    q_distance_matx = None
+    if q_names is not None:
+        print('\tProcessing query')
+        query_results = Parallel(n_jobs=arguments.cpus)(delayed(compute)(
+            seq=str(seq_dict[name]), name=name, results=results_path,
+            order=arguments.order, kmer=k_val, med_len=med_len,
+            method=method, queryname='Query') for name in q_names)
+        q_abs_fft_output, q_fft_output, q_cgr_output = zip(
+            *query_results)
+        q_distance_matx = (1 - corrcoef(q_abs_fft_output)) / 2
 
     if method_num == 14 or method_num == 15:
         # TODO print first CGR from each class
@@ -75,19 +92,26 @@ def startCalcProcess(arguments: Namespace):
         plt.savefig(results_path.joinpath('cgr_0.png'))
 
     print('Building distance matrix')
+    distance_matrix = (1 - corrcoef(abs_fft_output)) / 2
 
-    distance_matrix = (1 - np.corrcoef(abs_fft_output)) / 2
-    out_fn = results_path.joinpath('dist_mat').resolve()
+    out_fn = results_path.joinpath('dist_mat_train.npy').resolve()
+    q_out_fn = results_path.joinpath('dist_mat_query.npy').resolve()
     if not args.to_json:
-        np.save(str(out_fn), distance_matrix)
+        save(str(out_fn), distance_matrix)
+        if args.query_seq_path is not None:
+            save(str(q_out_fn), q_distance_matx)
 
     print('Performing classification .... \n')
 
     folds = arguments.folds if total_seq > arguments.folds else total_seq
     mean_accuracy, accuracy, cmatrix, mis_classified_dict, \
-    best_model = classify_dismat(distance_matrix, np.array(labels),
+    full_model = classify_dismat(distance_matrix, array(labels),
                                  folds)
-    confMatrixLabels = np.unique(labels).tolist()
+    cm_labels = unique(labels).tolist()
+    if q_names is not None:
+        print('Running query on trained models')
+        q_preds = {model_name: model.predict(q_distance_matx)
+                   for model_name, model in full_model.items()}
 
     print('Scaling & data visualisation...')
     viz_path = results_path.joinpath('Images').resolve()
@@ -96,7 +120,8 @@ def startCalcProcess(arguments: Namespace):
     # CGR plotting
     if cgr_output:
         out = viz_path.joinpath('CGR.png')
-        cgr_img_data = plotCGR(cgr_output, out=out, to_json=args.to_json)
+        cgr_img_data = plotCGR(cgr_output, sample_id=1,
+                               out=out, to_json=args.to_json)
     else:
         cgr_img_data = None
 
@@ -105,23 +130,23 @@ def startCalcProcess(arguments: Namespace):
     mds_img_data = plot3d(distance_matrix, labels, out=mds,
                           dim_res_method=args.dim_reduction,
                           to_json=args.to_json)
-
+    cm_display_objs = displayConfusionMatrix(cmatrix, cm_labels)
     # Get intercluster distances
-    intercluster_dist, cluster_labels = calcInterclustDist(
-        distance_matrix, labels, cluster_dict)
+    intercluster_dist = calcInterclustDist(
+        distance_matrix, labels)
     with open(results_path.joinpath('Run_data.txt'), 'a') as out:
         outline = f'\n10X cross validation classifier accuracies:\n'
         outline += "\n".join([f"\t{m}: {ac}" for m, ac in accuracy.items()])
         out.write(outline)
 
-    print('Processing completed')
     print('**** Processing completed ****\n')
     if args.to_json:
-        return dumps({
-            'mds': mds_img_data, 'cgr': cgr_img_data, 'cMatrix': cmatrix,
-            'cMatrixLabels': confMatrixLabels, 'modelAcc': accuracy,
-            'interclusterDist': intercluster_dist,
-            'clusterLabels': cluster_labels})
+        return dumps({'mds': mds_img_data, 'cgr': cgr_img_data,
+                      'cMatrix': cmatrix, 'cMatrixLabels': cm_labels,
+                      'cMatrix_plots': cm_display_objs,
+                      'modelAcc': accuracy,
+                      'interclusterDist': intercluster_dist,
+                      'queryPredictions': q_preds})
 
 
 if __name__ == '__main__':
