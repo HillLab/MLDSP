@@ -3,7 +3,7 @@
 """
 from collections import defaultdict
 from functools import partial
-from itertools import combinations
+from itertools import product, combinations
 from typing import Tuple, Dict, DefaultDict, List
 
 from numpy import array, ndarray, where, unique, zeros
@@ -75,6 +75,25 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
             aggregated_c_matrix[model_name] += cm
             misclassified_idx[model_name].append(where(
                 y_test == prediction)[0])
+    full_model = {}
+    prod = product(pipes.items(), enumerate(kf.split(dismat, alabels)))
+    for item in prod:
+        (model_name, pipe_model), (i, (train_index, test_index)) = item
+        full_model[model_name] = pipe_model.fit(dismat, alabels)
+        x_train, y_train = dismat[train_index], alabels[train_index]
+        x_test, y_test = dismat[test_index], alabels[test_index]
+        print(f"Computing fold {i}")
+        fitted = pipe_model.fit(x_train, y_train)
+        prediction = fitted.predict(x_test)
+        acc = accuracy_score(y_test, prediction)
+        accuracies[model_name].append(acc)
+        mean_model_accuracies[model_name] += acc
+        print(f'\tAccuracy of {model_name} = {acc}')
+        cm = confusion_matrix(y_test, prediction, labels=list(unique(
+            alabels)), normalize=None)
+        aggregated_c_matrix[model_name] += cm
+        misclassified_idx[model_name].append(where(y_test == prediction
+                                                   )[0])
 
     # Mean accuracy value across all classifiers
     avg_accuracy = sum(mean_model_accuracies.values()) / (folds * len(
