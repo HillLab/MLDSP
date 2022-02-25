@@ -28,6 +28,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
     """
     @Daniel
     Args:
+        cpus:
         dismat: 
         alabels:
         folds:
@@ -55,26 +56,6 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
     aggregated_c_matrix = defaultdict(partial(zeros, (
         n_classes, n_classes)))
     kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
-    best_model = defaultdict(lambda: (Pipeline, 0.0))
-
-    for i, (train_index, test_index) in enumerate(kf.split(
-            dismat, alabels)):
-        x_train, y_train = dismat[train_index], alabels[train_index]
-        x_test, y_test = dismat[test_index], alabels[test_index]
-        print(f"Computing fold {i+1}")
-        for model_name, pipe_model in pipes.items():
-            pipe_model.fit(x_train, y_train)
-            prediction = pipe_model.predict(x_test)
-            acc = accuracy_score(y_test, prediction)
-            accuracies[model_name].append(acc)
-            mean_model_accuracies[model_name] += acc
-            print(f'\tAccuracy of {model_name} = {acc}')
-            cm = confusion_matrix(y_test, prediction,
-                                  labels=list(unique(alabels)),
-                                  normalize=None)
-            aggregated_c_matrix[model_name] += cm
-            misclassified_idx[model_name].append(where(
-                y_test == prediction)[0])
     full_model = {}
     prod = product(pipes.items(), enumerate(kf.split(dismat, alabels)))
     for item in prod:
