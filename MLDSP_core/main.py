@@ -25,7 +25,7 @@ from MLDSP_core.visualisation import plotCGR, plot3d, \
 
 def startCalcProcess(arguments: Namespace) -> Optional[str]:
     """
-    @Daniel
+    
     Args:
         arguments:
     """
@@ -57,7 +57,7 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
                                        for a, b in seq_dict.items()])
     # out_fn = results_path.joinpath('labels').resolve()
     # np.save(str(out_fn), np.array(labels))
-    med_len = np.median(seqs_length)
+    med_len = median(seqs_length)
     with open(results_path.joinpath('Run_data.txt'), 'x') as log:
         log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: '
                   f'{k_val}\nMedian seq length: {med_len}\nClass '
@@ -83,12 +83,15 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
             *query_results)
         q_distance_matx = (1 - corrcoef(q_abs_fft_output)) / 2
 
+
     if method_num == 14 or method_num == 15:
-        # TODO print first CGR from each class
-        plt.matshow(cgr_output[0], cmap=cm.gray_r)
-        plt.xticks([])
-        plt.yticks([])
-        plt.savefig(results_path.joinpath('cgr_0.png'))
+        # indexes = [labels.index(x) for x in set(labels)]
+        for value in set (labels):
+            index = labels.index(value)
+            plt.matshow(cgr_output[index], cmap=cm.gray_r)
+            plt.xticks([])
+            plt.yticks([])
+            plt.savefig(results_path.joinpath(f'cgr_{value}.png'))
 
     print('Building distance matrix')
     distance_matrix = (1 - corrcoef(abs_fft_output)) / 2
