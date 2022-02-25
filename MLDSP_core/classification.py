@@ -55,16 +55,16 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
     aggregated_c_matrix = defaultdict(partial(zeros, (
         n_classes, n_classes)))
     kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
-    full_model = {}
-    for model_name, pipe_model in pipes.items():
-        full_model[model_name] = pipe_model.fit(dismat, alabels)
-        for i, (train_index, test_index) in enumerate(kf.split(
-                dismat, alabels)):
-            x_train, y_train = dismat[train_index], alabels[train_index]
-            x_test, y_test = dismat[test_index], alabels[test_index]
-            print(f"Computing fold {i}")
-            fitted = pipe_model.fit(x_train, y_train)
-            prediction = fitted.predict(x_test)
+    best_model = defaultdict(lambda: (Pipeline, 0.0))
+
+    for i, (train_index, test_index) in enumerate(kf.split(
+            dismat, alabels)):
+        x_train, y_train = dismat[train_index], alabels[train_index]
+        x_test, y_test = dismat[test_index], alabels[test_index]
+        print(f"Computing fold {i+1}")
+        for model_name, pipe_model in pipes.items():
+            pipe_model.fit(x_train, y_train)
+            prediction = pipe_model.predict(x_test)
             acc = accuracy_score(y_test, prediction)
             accuracies[model_name].append(acc)
             mean_model_accuracies[model_name] += acc

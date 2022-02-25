@@ -55,10 +55,9 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
 
     names, labels, seqs_length = zip(*[(a, cluster_dict[a], len(b))
                                        for a, b in seq_dict.items()])
-    out_fn = results_path.joinpath('labels').resolve()
-    save(str(out_fn), array(labels))
-    med_len = median(seqs_length)
-    print(f'Mean seq length: {med_len}')
+    # out_fn = results_path.joinpath('labels').resolve()
+    # np.save(str(out_fn), np.array(labels))
+    med_len = np.median(seqs_length)
     with open(results_path.joinpath('Run_data.txt'), 'x') as log:
         log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: '
                   f'{k_val}\nMedian seq length: {med_len}\nClass '
