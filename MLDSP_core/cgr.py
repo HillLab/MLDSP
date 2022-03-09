@@ -8,6 +8,7 @@ from typing import Tuple
 
 from numpy import ndarray, zeros, save, abs
 from scipy import fft
+import re
 
 
 def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
@@ -101,17 +102,26 @@ def  compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     Returns:
 
     """
-    seq_new = seq
+    seq_new = []
+    cgr_raw = zeros((2**kmer,2**kmer))
+    name = name.replace("/","-")
     if pyrimidine:
-        seq_new = seq_new.replace('G', 'A').replace('C', 'T')
-    cgr_raw = cgr(seq_new, order, kmer)
+        seq = seq.replace('G', 'A').replace('C', 'T')
+    seq_new = re.split('N+',seq) #remove N's from seq and split into contigs
+    #loop over contigs, generate individual cgrs and add (stack) them back into 1
+    for contig in seq_new:
+        cgr_raw += cgr(contig, order, kmer)
     if last_only:
         cgr_out = cgr_raw[-1, :]
     else:
         cgr_out = cgr_raw
-    out_filename = str(results.joinpath(
+    cgr_filename = str(results.joinpath(
         'Num_rep', f'cgr_k={kmer}_{name}').resolve())
-    save(out_filename, cgr_out)
+    save(cgr_filename, cgr_out)
     fft_out = fft.fft(cgr_out, axis=0)
+    fft_path = results.joinpath('Num_rep','fft',f'Fourier_{name}').resolve()
+    save(fft_path,fft_out)
     abs_fft_out = abs(fft_out.flatten())
+    abs_out = results.joinpath('Num_rep','abs_fft',f'Magnitude_spectrum_{name}')
+    save(abs_out, abs_fft_out)
     return abs_fft_out, fft_out, cgr_out
