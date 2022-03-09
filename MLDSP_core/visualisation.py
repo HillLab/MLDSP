@@ -68,7 +68,7 @@ def plotCGR(cgr_output: ndarray, sample_id: int = 0,
 
 
 def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
-           dim_res_method: str = 'pca', to_json: bool = False
+           dim_res_method: str = 'mds', to_json: bool = False
            ) -> Union[None, dumps]:
     """
     @Daniel
@@ -91,7 +91,7 @@ def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
                         opacity=0.9)
     # tight layout
     fig.update_layout(margin=dict(l=20, r=0, b=0, t=20),
-                      legend_title_text="")
+                      legend_title_text="Classes")
     if to_json:
         # mdsGraphJSON = dumps(fig, cls=PlotlyJSONEncoder)
         # return mdsGraphJSON
