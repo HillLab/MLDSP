@@ -104,7 +104,7 @@ def  compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     """
     seq_new = []
     cgr_raw = zeros((2**kmer,2**kmer))
-    name = name.replace("/","-")
+    # name = name.replace("/","-")
     if pyrimidine:
         seq = seq.replace('G', 'A').replace('C', 'T')
     seq_new = re.split('N+',seq) #remove N's from seq and split into contigs
