@@ -104,4 +104,4 @@ def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]) -> str:
         inter_dist_dict[i][i] = inter_dist_dict[j][j] = 0
         inter_dist_dict[i][j] = inter_dist_dict[j][i] = dist
 
-    return DataFrame(inter_dist_dict).to_html()
+    return DataFrame(inter_dist_dict)
