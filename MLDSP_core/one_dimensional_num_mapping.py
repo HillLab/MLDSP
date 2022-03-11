@@ -217,6 +217,7 @@ def one_dimensional_num_mapping_wrapper(
     """
     @Daniel
     Args:
+        name:
         seq:
         method:
         results_path:
