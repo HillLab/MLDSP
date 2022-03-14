@@ -84,7 +84,7 @@ def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
                        order=order, pyrimidine=True, last_only=True)
 
 
-def  compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
+def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 order: str = 'ACGT', pyrimidine: bool = False,
                 last_only: bool = False, **kwargs
                 ) -> Tuple[ndarray, ...]:
