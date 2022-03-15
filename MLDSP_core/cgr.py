@@ -6,7 +6,7 @@ nucleotides or uracil
 from pathlib import Path
 from typing import Tuple
 
-from numpy import ndarray, zeros, save, abs
+from numpy import ndarray, zeros, save, abs, vectorize
 from scipy import fft
 import re
 
@@ -91,7 +91,7 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:
-        last_only: takes only the last (bottom) row but all columns of cgr to make a 1
+        last_only: takes only the last (bottom) row but all columns of cgr to make a 1DPuPyCGR
         pyrimidine: Replace purine for pyrimidines (PuPyCGR, 1DPuPyCGR)
         seq: sequence string
         name: name of the sequence
@@ -102,13 +102,10 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     Returns:
 
     """
-    seq_new = []
     cgr_raw = zeros((2**kmer,2**kmer))
-    # name = name.replace("/","-")
     if pyrimidine:
         seq = seq.replace('G', 'A').replace('C', 'T')
     seq_new = re.split('N+',seq) #remove N's from seq and split into contigs
-    #loop over contigs, generate individual cgrs and add (stack) them back into 1
     for contig in seq_new:
         cgr_raw += cgr(contig, order, kmer)
     if last_only:

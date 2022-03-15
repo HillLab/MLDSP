@@ -16,15 +16,11 @@ def csv2dict(infile: Path) -> Dict[str, str]:
     """
     dictionary = {}
     # will not work if csv file is utf-8 encoded
-    with open(infile,newline='') as inf:
-        dialect = csv.Sniffer().sniff(inf.read(2048))
-        inf.seek(0)
-        reader = csv.reader(inf,dialect)
-        # assumes 1st column is accession and 2nd is class label
-        for line in reader:
-            key = line[0].replace("/","_").replace("\\","_")
-            value = line[1].replace("/","_").replace("\\","_")
-            dictionary[key] = value
+    with open(infile) as inf:
+        for line in inf:
+            if line:
+                key, value = line.strip().replace("/","_").replace("\\","_").split(',')
+                dictionary[key] = value
     return dictionary
 
 
