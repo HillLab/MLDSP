@@ -6,8 +6,9 @@ nucleotides or uracil
 from pathlib import Path
 from typing import Tuple
 
-from numpy import ndarray, zeros, save, abs
+from numpy import ndarray, zeros, save, abs, frompyfunc
 from scipy import fft
+import re
 
 
 def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
@@ -90,7 +91,7 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:
-        last_only: takes only the last (bottom) row but all columns of cgr to make 1DPuPyCGR
+        last_only: takes only the last (bottom) row but all columns of cgr to make a 1DPuPyCGR
         pyrimidine: Replace purine for pyrimidines (PuPyCGR, 1DPuPyCGR)
         seq: sequence string
         name: name of the sequence
@@ -101,17 +102,21 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     Returns:
 
     """
-    seq_new = seq
     if pyrimidine:
-        seq_new = seq_new.replace('G', 'A').replace('C', 'T')
-    cgr_raw = cgr(seq_new, order, kmer)
+        seq = seq.replace('G', 'A').replace('C', 'T')
+    seq_new = re.split('N+',seq) #remove N's from seq and split into contigs
+    cgr_raw = frompyfunc(cgr,3,1)(seq_new, order, kmer).sum(axis=0)
     if last_only:
         cgr_out = cgr_raw[-1, :]
     else:
         cgr_out = cgr_raw
-    out_filename = str(results.joinpath(
+    cgr_filename = str(results.joinpath(
         'Num_rep', f'cgr_k={kmer}_{name}').resolve())
-    save(out_filename, cgr_out)
+    save(cgr_filename, cgr_out)
     fft_out = fft.fft(cgr_out, axis=0)
+    fft_path = results.joinpath('Num_rep','fft',f'Fourier_{name}').resolve()
+    save(fft_path,fft_out)
     abs_fft_out = abs(fft_out.flatten())
+    abs_out = results.joinpath('Num_rep','abs_fft',f'Magnitude_spectrum_{name}')
+    save(abs_out, abs_fft_out)
     return abs_fft_out, fft_out, cgr_out

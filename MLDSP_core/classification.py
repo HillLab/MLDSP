@@ -26,15 +26,27 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
                                             DefaultDict[str, List[ndarray]],
                                             Dict[str, Pipeline]]:
     """
-    @Daniel
+    Supervised ML model training & k-fold cross-validation
+    
+    Performs supervised training of machine learning models:
+    (Linear Discriminant, Linear SVM, Quadratic SVM
+    and k-nearest neighbour) using the distance matrix rows
+    as feature vectors and user provided metadata as class
+    labels.
+    
     Args:
-        cpus:
-        dismat:
-        alabels:
-        folds:
-
+        dismat: Pairwise distance matrix of all samples in training set 
+            with zero diagonal and of shape (n,n) where n sample size
+        alabels: Array of class labels for supervised learning
+        folds: Number of folds for cross-validation split
     Returns:
-
+        avg_accuracy: Average of all models' mean accuracy across all folds
+        mean_model_accuracies: Average of each model's accuracy across all
+            folds
+        aggregated_c_matrix: Sum of confusion across all folds for each model
+        misclassified_idx: List of indices that were incorrectly labeled
+            in cross validation for each model 
+        full_model: Dictionary of each ML model with it's fitted pipeline
     """
     # matlab doesn't specify what solver it uses, orginal code used (shrinkage) gamma=0
     pipes = {
@@ -104,4 +116,4 @@ def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]) -> str:
         inter_dist_dict[i][i] = inter_dist_dict[j][j] = 0
         inter_dist_dict[i][j] = inter_dist_dict[j][i] = dist
 
-    return DataFrame(inter_dist_dict).to_html()
+    return DataFrame(inter_dist_dict)

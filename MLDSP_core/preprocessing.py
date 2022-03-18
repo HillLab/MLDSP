@@ -1,8 +1,9 @@
 from collections import Counter
 from pathlib import Path
 from typing import Dict, Optional, Tuple
-
+import csv
 from pyfaidx import Fasta
+import re
 
 
 def csv2dict(infile: Path) -> Dict[str, str]:
@@ -14,10 +15,11 @@ def csv2dict(infile: Path) -> Dict[str, str]:
     Returns:dictionary with first field as key and second as value
     """
     dictionary = {}
+    # will not work if csv file is utf-8 encoded
     with open(infile) as inf:
         for line in inf:
             if line:
-                key, value = line.strip().split(',')
+                key, value = line.strip().replace("/","_").replace("\\","_").split(',')
                 dictionary[key] = value
     return dictionary
 
@@ -59,11 +61,11 @@ def preprocessing(data_set: Path, metadata: Optional[Path],
             if file.suffix != '.fai':
                 with open(file) as infile, open(outfn, 'a') as outfile:
                     outfile.write(f'{infile.read().strip()}\n')
-    seq_dict = Fasta(str(outfn))
+    seq_dict = Fasta(str(outfn),key_function = lambda x:x.replace("/","_").replace("\\","_"))
     if metadata is not None:
         difference = set(cluster_dict.keys()).difference(seq_dict.keys())
         if difference:
-            raise Exception(f"Your metadata and a your fasta don't match,"
+            raise Exception(f"Your metadata and your fasta don't match,"
                             f" check your input\nCulprit(s) "
                             f"{''.join(difference)}")
     total_seq = len(seq_dict.keys())
