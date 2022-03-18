@@ -19,12 +19,12 @@ from sklearn.svm import SVC
 
 
 # noinspection PyArgumentEqualDefault
-def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
-                    ) -> Tuple[float,
-                               DefaultDict[str, float],
-                               DefaultDict[str, ndarray],
-                               DefaultDict[str, List[ndarray]],
-                               Dict[str, Pipeline]]:
+def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
+                    cpus: int = 4) -> Tuple[float,
+                                            DefaultDict[str, float],
+                                            DefaultDict[str, ndarray],
+                                            DefaultDict[str, List[ndarray]],
+                                            Dict[str, Pipeline]]:
     """
     Supervised ML model training & k-fold cross-validation
     
@@ -39,7 +39,6 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
             with zero diagonal and of shape (n,n) where n sample size
         alabels: Array of class labels for supervised learning
         folds: Number of folds for cross-validation split
-
     Returns:
         avg_accuracy: Average of all models' mean accuracy across all folds
         mean_model_accuracies: Average of each model's accuracy across all
@@ -60,7 +59,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
             decision_function_shape='ovo')),
         'KNN': make_pipeline(StandardScaler(), KNeighborsClassifier(
             n_neighbors=1, leaf_size=50, metric='euclidean',
-            weights='uniform', algorithm='brute'))
+            weights='uniform', algorithm='brute', n_jobs=cpus))
     }
     n_classes = unique(alabels).shape[0]
     accuracies = defaultdict(list)
@@ -72,11 +71,11 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int
     full_model = {}
     prod = product(pipes.items(), enumerate(kf.split(dismat, alabels)))
     for item in prod:
-        (model_name, pipe_model), (i, (train_index, test_index)) = item
+        (model_name, pipe_model), (fold, (train_idx, test_idx)) = item
         full_model[model_name] = pipe_model.fit(dismat, alabels)
-        x_train, y_train = dismat[train_index], alabels[train_index]
-        x_test, y_test = dismat[test_index], alabels[test_index]
-        print(f"Computing fold {i}")
+        x_train, y_train = dismat[train_idx], alabels[train_idx]
+        x_test, y_test = dismat[test_idx], alabels[test_idx]
+        print(f"Computing fold {fold}")
         fitted = pipe_model.fit(x_train, y_train)
         prediction = fitted.predict(x_test)
         acc = accuracy_score(y_test, prediction)

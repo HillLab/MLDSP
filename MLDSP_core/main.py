@@ -98,7 +98,7 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
     folds = arguments.folds if total_seq > arguments.folds else total_seq
     mean_accuracy, accuracy, cmatrix, mis_classified_dict, \
     full_model = classify_dismat(distance_matrix, array(labels),
-                                 folds)
+                                 folds, cpus=arguments.cpus)
     cm_labels = unique(labels).tolist()
     q_preds = None
     if q_names is not None:
