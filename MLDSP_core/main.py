@@ -25,7 +25,7 @@ from MLDSP_core.visualisation import plotCGR, plot3d, \
 
 def startCalcProcess(arguments: Namespace) -> Optional[str]:
     """
-    
+    @Daniel
     Args:
         arguments:
     """

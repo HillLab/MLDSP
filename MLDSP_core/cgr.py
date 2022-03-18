@@ -6,7 +6,7 @@ nucleotides or uracil
 from pathlib import Path
 from typing import Tuple
 
-from numpy import ndarray, zeros, save, abs, vectorize
+from numpy import ndarray, zeros, save, abs, frompyfunc
 from scipy import fft
 import re
 
@@ -102,12 +102,10 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     Returns:
 
     """
-    cgr_raw = zeros((2**kmer,2**kmer))
     if pyrimidine:
         seq = seq.replace('G', 'A').replace('C', 'T')
     seq_new = re.split('N+',seq) #remove N's from seq and split into contigs
-    for contig in seq_new:
-        cgr_raw += cgr(contig, order, kmer)
+    cgr_raw = frompyfunc(cgr,3,1)(seq_new, order, kmer).sum(axis=0)
     if last_only:
         cgr_out = cgr_raw[-1, :]
     else:
