@@ -212,7 +212,7 @@ def num_mapping_Doublet(sq: ndarray) -> ndarray:
 
 
 def one_dimensional_num_mapping_wrapper(
-        seq: str, name: str, method: Callable, results_path: Path,
+        seq: str, name: str, method: Callable, results: Path,
         med_len: int = 100, **kwargs) -> Tuple[Any, Any, None]:
     """
     @Daniel
@@ -220,7 +220,7 @@ def one_dimensional_num_mapping_wrapper(
         name:
         seq:
         method:
-        results_path:
+        results:
         med_len:
 
     Returns:
@@ -234,8 +234,8 @@ def one_dimensional_num_mapping_wrapper(
     if len(num_seq) < med_len:
         pad_width = int(med_len - len(num_seq))
         num_seq = pad(num_seq, pad_width, 'antisymmetric')[pad_width:]
-    ofname = results_path.joinpath('Num_rep', f'{str(method).split()[1]}_{name}').resolve
-    save(str(ofname), num_seq)
+    ofname = str(results.joinpath('Num_rep', f'{str(method).split()[1]}_{name}').resolve())
+    save(ofname, num_seq)
     fft_output = fft.fft(num_seq)
     abs_fft_output = abs(fft_output.flatten())
     return abs_fft_output, fft_output, None

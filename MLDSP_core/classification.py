@@ -85,7 +85,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         cm = confusion_matrix(y_test, prediction, labels=list(unique(
             alabels)), normalize=None)
         aggregated_c_matrix[model_name] += cm
-        misclassified_idx[model_name].append(where(y_test == prediction
+        misclassified_idx[model_name].append(where(y_test != prediction
                                                    )[0])
 
     # Mean accuracy value across all classifiers
