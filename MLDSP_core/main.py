@@ -47,6 +47,7 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
         data_set, metadata)
     q_names = None
+    #names in the order of seq_dict
     names, labels, seqs_length = zip(*[(a, cluster_dict[a], len(b))
                                        for a, b in seq_dict.items()])
     med_len = median(seqs_length)
@@ -71,7 +72,7 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
     log = open(results_path.joinpath('Run_data.txt'), 'x')
     log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: '
                 f'{k_val}\nMedian seq length: {med_len}\nDataset size:'
-                f'{total_seq}\nClass sizes:{cluster_stats}')
+                f'{total_seq}\nClass sizes:{cluster_stats}\n')
 
     print('Generating numerical sequences, applying DFT, computing '
           'magnitude spectra .... \n')
@@ -133,6 +134,7 @@ def startCalcProcess(arguments: Namespace) -> Optional[str]:
     if method_num == 14 or method_num == 15:
         for value in set (labels):
             index = labels.index(value)
+            log.write(f'CGR {value}: cgr_k={k_val}_{names[index]}.npy')
             out = viz_path.joinpath(f'CGR {value}.png')
             cgr_img_data = plotCGR(cgr_output, sample_id=index,
                                 out=out, to_json=args.to_json)
@@ -201,7 +203,8 @@ if __name__ == '__main__':
     opt.add_argument('--cpus', '-c', help='Number of cpus to use',
                      default=cpu_count(), type=int)
     opt.add_argument('--order', '-d', default='ACGT', type=str,
-                     help='Order of the nucleotides in CGR')
+                     help='Order of the nucleotides in CGR, must be'
+                     'uppercase')
     opt.add_argument('--kmer', '-k', help='Kmer size', default=5, type=int)
     opt.add_argument('--method', '-m', default=14, type=int,
                      choices=range(1, 17),

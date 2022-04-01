@@ -75,7 +75,7 @@ def preprocessing(data_set: Path, metadata: Optional[Path],
             if file.suffix != '.fai':
                 with open(file) as infile, open(outfn, 'a') as outfile:
                     outfile.write(f'{infile.read().strip()}\n')
-    seq_dict = Fasta(str(outfn),key_function = lambda x:x.replace("/","_").replace("\\","_"))
+    seq_dict = Fasta(str(outfn),key_function = lambda x:x.replace("/","_").replace("\\","_"),sequence_always_upper=True)
     if metadata is not None:
         difference = set(cluster_dict.keys()).difference(seq_dict.keys())
         if difference:
