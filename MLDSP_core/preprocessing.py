@@ -28,15 +28,6 @@ def csv2dict(infile: Path) -> Dict[str, str]:
             dictionary[key] = value
     return dictionary
     
-    # with open(infile,newline='') as inf:
-    #     for line in inf:
-    #         if line:
-    #             key, value = line.strip().split(',')
-    #             key.replace("/","_").replace("\\","_")
-    #             value.replace("/","_").replace("\\","_")
-    #             dictionary[key] = value
-    # return dictionary
-
 
 def preprocessing(data_set: Path, metadata: Optional[Path],
                   prefix: str = 'Train') -> Tuple[
