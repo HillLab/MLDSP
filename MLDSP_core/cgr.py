@@ -110,13 +110,15 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
         cgr_out = cgr_raw[-1, :]
     else:
         cgr_out = cgr_raw
-    cgr_filename = str(results.joinpath(
-        'Num_rep', f'cgr_k={kmer}_{name}').resolve())
-    save(cgr_filename, cgr_out)
+    cgr_path = results.joinpath('Num_rep',f'cgr_k={kmer}_{name}')
+    cgr_path.parent.mkdir(parents=True,exist_ok=True)
+    save(cgr_path, cgr_out)
     fft_out = fft.fft(cgr_out, axis=0)
-    fft_path = results.joinpath('Num_rep','fft',f'Fourier_{name}').resolve()
+    fft_path = results.joinpath('Num_rep','fft',f'Fourier_{name}')
+    fft_path.parent.mkdir(parents=True,exist_ok=True)
     save(fft_path,fft_out)
     abs_fft_out = abs(fft_out.flatten())
     abs_out = results.joinpath('Num_rep','abs_fft',f'Magnitude_spectrum_{name}')
+    abs_out.parent.mkdir(parents=True,exist_ok=True)
     save(abs_out, abs_fft_out)
     return abs_fft_out, fft_out, cgr_out

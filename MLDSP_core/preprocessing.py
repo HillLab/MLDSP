@@ -4,6 +4,7 @@ from typing import Dict, Optional, Tuple
 import csv
 from pyfaidx import Fasta
 import re
+import chardet
 
 
 def csv2dict(infile: Path) -> Dict[str, str]:
@@ -15,14 +16,18 @@ def csv2dict(infile: Path) -> Dict[str, str]:
     Returns:dictionary with first field as key and second as value
     """
     dictionary = {}
-    # will not work if csv file is utf-8 encoded
-    with open(infile) as inf:
-        for line in inf:
-            if line:
-                key, value = line.strip().replace("/","_").replace("\\","_").split(',')
-                dictionary[key] = value
+    # will not work if csv file is saved as utf-8 in excel
+    with open(infile,newline='') as inf:
+        dialect = csv.Sniffer().sniff(inf.read(2048))
+        inf.seek(0)
+        reader = csv.reader(inf,dialect)
+        # assumes 1st column is accession and 2nd is class label
+        for line in reader:
+            key = line[0].replace("/","_").replace("\\","_")
+            value = line[1].replace("/","_").replace("\\","_")
+            dictionary[key] = value
     return dictionary
-
+    
 
 def preprocessing(data_set: Path, metadata: Optional[Path],
                   prefix: str = 'Train') -> Tuple[
@@ -54,19 +59,19 @@ def preprocessing(data_set: Path, metadata: Optional[Path],
     else:
         cluster_dict = cluster_stats = None
     if outfn.exists():
-        print(f'File {outfn} exists and will be used! If this is '
-              f'unintended, please remove the file')
+        print(f'File {outfn.name} exists and will be used! If this is '
+              f'unintended, please remove the file\n')
     else:
         for file in data_set.glob('*'):
             if file.suffix != '.fai':
                 with open(file) as infile, open(outfn, 'a') as outfile:
                     outfile.write(f'{infile.read().strip()}\n')
-    seq_dict = Fasta(str(outfn),key_function = lambda x:x.replace("/","_").replace("\\","_"))
+    seq_dict = Fasta(str(outfn),key_function = lambda x:x.replace("/","_").replace("\\","_"),sequence_always_upper=True)
     if metadata is not None:
         difference = set(cluster_dict.keys()).difference(seq_dict.keys())
         if difference:
             raise Exception(f"Your metadata and your fasta don't match,"
-                            f" check your input\nCulprit(s) "
+                            f" check your input\nCulprit(s): "
                             f"{''.join(difference)}")
     total_seq = len(seq_dict.keys())
     return seq_dict, total_seq, cluster_dict, cluster_stats

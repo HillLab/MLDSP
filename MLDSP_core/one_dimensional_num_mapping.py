@@ -212,15 +212,15 @@ def num_mapping_Doublet(sq: ndarray) -> ndarray:
 
 
 def one_dimensional_num_mapping_wrapper(
-        seq: str, name: str, method: Callable, results_path: Path,
-        med_len: int = 100, **kwargs) -> Tuple[Any, Any, None]:
+        seq: str, name: str, method: Callable, results: Path,
+        med_len: int, **kwargs) -> Tuple[Any, Any, None]:
     """
     @Daniel
     Args:
         name:
         seq:
         method:
-        results_path:
+        results:
         med_len:
 
     Returns:
@@ -234,8 +234,16 @@ def one_dimensional_num_mapping_wrapper(
     if len(num_seq) < med_len:
         pad_width = int(med_len - len(num_seq))
         num_seq = pad(num_seq, pad_width, 'antisymmetric')[pad_width:]
-    ofname = results_path.joinpath('Num_rep', f'{str(method).split()[1]}_{name}').resolve
-    save(str(ofname), num_seq)
+    method_name = f'{str(method).split()[1]}'
+    ofname = results.joinpath('Num_rep', f'{method_name}_{name}').resolve()
+    ofname.parent.mkdir(parents=True,exist_ok=True)
+    save(ofname, num_seq)
     fft_output = fft.fft(num_seq)
+    fft_path = results.joinpath('Num_rep','fft',f'Fourier_{name}')
+    fft_path.parent.mkdir(parents=True,exist_ok=True)
+    save(fft_path,fft_output)
     abs_fft_output = abs(fft_output.flatten())
+    abs_out = results.joinpath('Num_rep','abs_fft',f'Magnitude_spectrum_{name}')
+    abs_out.parent.mkdir(parents=True,exist_ok=True)
+    save(abs_out, abs_fft_output)
     return abs_fft_output, fft_output, None
