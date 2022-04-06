@@ -8,7 +8,7 @@ from pathlib import Path
 
 from joblib import cpu_count
 
-from MLDSP_core.main import startCalcProcess
+from MLDSP_core.main import startCalcProcess_train, startCalcProcess_test
 
 if __name__ == '__main__':
     class PathAction(Action):
@@ -29,8 +29,8 @@ if __name__ == '__main__':
 
     opt = ArgumentParser(usage='%(prog)s data_set_path metadata [options]',
                          formatter_class=ArgumentDefaultsHelpFormatter)
-    opt.add_argument('training_set', help='Path to data set to train the'
-                                          ' models with', action=PathAction)
+    opt.add_argument('train_set', help='Path to data set to train the'
+                                       ' models with', action=PathAction)
     opt.add_argument('training_labels', help='CSV with the mapping of '
                                              'labels and sequence names')
     opt.add_argument('--run_name', '-r', help='Name of the run',
@@ -54,4 +54,7 @@ if __name__ == '__main__':
 
     args = opt.parse_args()
 
-    startCalcProcess(args)
+    train_out = startCalcProcess_train(**vars(args))
+    if args.query_seq_path is not None:
+        test_out = startCalcProcess_test(**vars(args))
+    print(f"{'*' * 8}\n* DONE *\n{'*' * 8}")

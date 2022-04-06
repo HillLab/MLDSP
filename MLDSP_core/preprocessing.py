@@ -1,10 +1,12 @@
+from codecs import EncodedFile
 from collections import Counter
+from copy import deepcopy
+from io import BytesIO
 from pathlib import Path
-from typing import Dict, Optional, Tuple
-import csv
+from typing import Dict, Optional, Tuple, Union
+
+from chardet import detect
 from pyfaidx import Fasta
-import re
-import chardet
 
 
 def csv2dict(infile: Path) -> Dict[str, str]:
@@ -16,22 +18,25 @@ def csv2dict(infile: Path) -> Dict[str, str]:
     Returns:dictionary with first field as key and second as value
     """
     dictionary = {}
-    # will not work if csv file is saved as utf-8 in excel
-    with open(infile,newline='') as inf:
-        dialect = csv.Sniffer().sniff(inf.read(2048))
-        inf.seek(0)
-        reader = csv.reader(inf,dialect)
-        # assumes 1st column is accession and 2nd is class label
+    # will not work if csv file is saved as utf-8 in excel in a MAC
+    with open(infile, mode='rb') as reader:
+        data = BytesIO(reader.read())
+        data2 = deepcopy(data)
+        en = detect(data.read())['encoding']
+        reader = EncodedFile(data2, en, file_encoding='ascii')
         for line in reader:
-            key = line[0].replace("/","_").replace("\\","_")
-            value = line[1].replace("/","_").replace("\\","_")
-            dictionary[key] = value
+            if line:
+                line = line.strip().split(b',')
+                key = line[0].replace(b"/", b"_").replace(b"\\", b"_").decode('ascii')
+                value = line[1].replace(b"/", b"_").replace(b"\\", b"_").decode('ascii')
+                dictionary[key] = value
     return dictionary
-    
 
-def preprocessing(data_set: Path, metadata: Optional[Path],
-                  prefix: str = 'Train') -> Tuple[
-    Fasta, int, Optional[Dict[str, str]], Optional[Counter]]:
+
+def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
+                  prefix: str = 'Train') -> Tuple[Fasta, int,
+                                                  Optional[Dict[str, str]],
+                                                  Optional[Counter]]:
     """
     TODO: update these doc strings
     Preprocessing of fasta sequences using BioPython into a database of
@@ -51,7 +56,12 @@ def preprocessing(data_set: Path, metadata: Optional[Path],
     total_seq: integer of the total sequence count in dataset.
 
     """
+
     # Iterate through all fasta files and read it into data structure
+    def replace(x):
+        return x.replace("/", "_").replace("\\", "_")
+
+    data_set = Path(data_set).resolve()
     outfn = data_set.joinpath(f'{prefix}_all_seqs.fasta').resolve()
     if metadata is not None:
         cluster_dict = csv2dict(metadata)
@@ -63,10 +73,13 @@ def preprocessing(data_set: Path, metadata: Optional[Path],
               f'unintended, please remove the file\n')
     else:
         for file in data_set.glob('*'):
-            if file.suffix != '.fai':
+            if file.suffix != '.fai' and '_all_seqs.fasta' not in str(file):
                 with open(file) as infile, open(outfn, 'a') as outfile:
                     outfile.write(f'{infile.read().strip()}\n')
-    seq_dict = Fasta(str(outfn),key_function = lambda x:x.replace("/","_").replace("\\","_"),sequence_always_upper=True)
+    seq_dict = Fasta(
+        str(outfn), key_function=replace, duplicate_action="first",
+        sequence_always_upper=True
+    )
     if metadata is not None:
         difference = set(cluster_dict.keys()).difference(seq_dict.keys())
         if difference:

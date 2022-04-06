@@ -3,12 +3,12 @@ Functions to compute the CGR representation. This function assumes that
 the sequence is in standard ACTG, with no missing values (N), modified
 nucleotides or uracil
 """
+import re
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
 from numpy import ndarray, zeros, save, abs, frompyfunc
 from scipy import fft
-import re
 
 
 def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
@@ -86,8 +86,9 @@ def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
 
 def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 order: str = 'ACGT', pyrimidine: bool = False,
-                last_only: bool = False, **kwargs
-                ) -> Tuple[ndarray, ...]:
+                last_only: bool = False, label: Optional[str] = None,
+                **kwargs
+                ) -> Tuple[ndarray, ndarray, ndarray, Optional[str]]:
     """
     This function compute the CGR matrix for a sequence in seq_dict
     Args:
@@ -98,6 +99,7 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
         kmer: Kmer value to use
         results: Path to the results folder
         order: Order of the nucleotides in the Chaos square
+        label: label of the
 
     Returns:
 
@@ -121,4 +123,4 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     abs_out = results.joinpath('Num_rep','abs_fft',f'Magnitude_spectrum_{name}')
     abs_out.parent.mkdir(parents=True,exist_ok=True)
     save(abs_out, abs_fft_out)
-    return abs_fft_out, fft_out, cgr_out
+    return abs_fft_out, fft_out, cgr_out, label

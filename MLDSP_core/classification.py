@@ -35,7 +35,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     labels.
     
     Args:
-        dismat: Pairwise distance matrix of all samples in training set 
+        cpus:
+        dismat: Pairwise distance matrix of all samples in training set
             with zero diagonal and of shape (n,n) where n sample size
         alabels: Array of class labels for supervised learning
         folds: Number of folds for cross-validation split
@@ -85,9 +86,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         cm = confusion_matrix(y_test, prediction, labels=list(unique(
             alabels)), normalize=None)
         aggregated_c_matrix[model_name] += cm
-        misclassified_idx[model_name].append(where(y_test != prediction
-                                                   )[0])
-
+        misclassified_idx[model_name].append(where(
+            y_test != prediction)[0])
     # Mean accuracy value across all classifiers
     avg_accuracy = sum(mean_model_accuracies.values()) / (folds * len(
         mean_model_accuracies))
@@ -97,7 +97,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
            misclassified_idx, full_model
 
 
-def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]) -> str:
+def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]
+                       ) -> DataFrame:
     """
     @ Daniel
     Args:
@@ -111,9 +112,8 @@ def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]) -> str:
     un_labels = unique(arr)
     inter_dist_dict = defaultdict(dict)
     for i, j in combinations(un_labels, 2):
-        dist = distMatrix[where(arr == i)[0]][:, where(arr == j)[0]
-               ].ravel().mean()
+        dist = distMatrix[where(arr == i)[0]][:, where(arr == j)[0]].ravel(
+        ).mean()
         inter_dist_dict[i][i] = inter_dist_dict[j][j] = 0
         inter_dist_dict[i][j] = inter_dist_dict[j][i] = dist
-
     return DataFrame(inter_dist_dict)

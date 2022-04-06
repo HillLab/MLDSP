@@ -3,7 +3,7 @@
 """
 from pathlib import Path
 from string import ascii_uppercase
-from typing import Callable, Tuple, Any
+from typing import Callable, Tuple, Any, Optional
 
 from numpy import ndarray, array, vectorize, where, zeros, save, abs
 from pywt import pad
@@ -211,9 +211,12 @@ def num_mapping_Doublet(sq: ndarray) -> ndarray:
     return numSeq
 
 
-def one_dimensional_num_mapping_wrapper(
-        seq: str, name: str, method: Callable, results: Path,
-        med_len: int, **kwargs) -> Tuple[Any, Any, None]:
+def one_dimensional_num_mapping_wrapper(seq: str, name: str,
+                                        method: Callable, results: Path,
+                                        med_len: int, label: Optional[str],
+                                        **kwargs
+                                        ) -> Tuple[Any, Any, None,
+                                                   Optional[str]]:
     """
     @Daniel
     Args:
@@ -222,7 +225,7 @@ def one_dimensional_num_mapping_wrapper(
         method:
         results:
         med_len:
-
+        label:
     Returns:
 
     """
@@ -236,7 +239,7 @@ def one_dimensional_num_mapping_wrapper(
         num_seq = pad(num_seq, pad_width, 'antisymmetric')[pad_width:]
     method_name = f'{str(method).split()[1]}'
     ofname = results.joinpath('Num_rep', f'{method_name}_{name}').resolve()
-    ofname.parent.mkdir(parents=True,exist_ok=True)
+    ofname.parent.mkdir(parents=True, exist_ok=True)
     save(ofname, num_seq)
     fft_output = fft.fft(num_seq)
     fft_path = results.joinpath('Num_rep','fft',f'Fourier_{name}')
@@ -246,4 +249,4 @@ def one_dimensional_num_mapping_wrapper(
     abs_out = results.joinpath('Num_rep','abs_fft',f'Magnitude_spectrum_{name}')
     abs_out.parent.mkdir(parents=True,exist_ok=True)
     save(abs_out, abs_fft_output)
-    return abs_fft_output, fft_output, None
+    return abs_fft_output, fft_output, None, label

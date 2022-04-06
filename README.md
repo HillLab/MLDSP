@@ -34,7 +34,7 @@ $ MLDSP -h
 usage: MLDSP_core data_set_path metadata [options]
 
 positional arguments:
-  training_set          Path to data set to train the models with
+  train_set          Path to data set to train the models with
   training_labels       CSV with the mapping of labels and sequence names
 
 optional arguments:
