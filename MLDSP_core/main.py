@@ -65,7 +65,8 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
            print_file=print_file)
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
-    q_seqs, q_nseq, _, _ = preprocessing(query_seq_path, None, prefix='Query',
+    q_seqs, q_nseq, _, _ = preprocessing(query_seq_path, None,
+                                         prefix='Query',
                                          print_file=print_file)
     q_seqs_len = [len(b) for b in q_seqs.values()]
     q_med_len = median(q_seqs_len)
@@ -134,16 +135,22 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     if 'quiet' in kwargs:
         if kwargs['quiet']:
             print_file = results_path.joinpath('prints.txt')
-    try:
-        results_path.mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
-        uprint("This output directory already exists, consider changing"
-               " the directory or Run name\n", print_file=print_file)
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
         train_set, train_labels, print_file=print_file)
     med_len = median([len(x) for x in seq_dict.values()])
+    corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
+    full_model_path = results_path.joinpath('Trained_models.pkl')
+    if corr_fn.exists() or full_model_path.exists():
+        uprint("Training with this name has already be run. Using stored"
+               "values", print_file=print_file)
+        return None, med_len
+    try:
+        results_path.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        raise Exception("This output directory already exists, "
+                        "consider changing the directory or Run name")
     log = Logger(results_path, f'Training_Run_{run_name}.log')
     log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: {kmer}'
               f'\nMedian seq length: {med_len}\nDataset size: '
@@ -163,7 +170,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     uprint('Building distance matrix', print_file=print_file)
     corr_fun = partial(corrcoef, abs_fft_output)
     distance_matrix = (1 - corr_fun()) / 2
-    corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
+
     with open(corr_fn, 'wb') as pickling:
         dump(corr_fun, pickling)
     if not to_json:
@@ -180,7 +187,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
 
     uprint('Scaling & data visualisation...', print_file=print_file)
     viz_path = results_path.joinpath('Images').resolve()
-    with open(results_path.joinpath('Trained_models.pkl'), 'wb') as model_path:
+    with open(full_model_path, 'wb') as model_path:
         dump(full_model, model_path)
     if not to_json:
         viz_path.mkdir(parents=True, exist_ok=True)
