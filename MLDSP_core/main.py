@@ -176,7 +176,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Dict[str, str],
         viz_path.mkdir(parents=True, exist_ok=True)
     # CGR plotting
     cgr_img_data = None
-    if method == 'Pu/Py CGR' or method == 'Last row CGR':
+    if method == 'Pu/Py CGR' or method == 'Chaos Game Representation (CGR)':
         for value in set(labels):
             index = labels.index(value)
             log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict)[index]}.npy')
