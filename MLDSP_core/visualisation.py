@@ -51,7 +51,7 @@ def plotCGR(cgr_output: ndarray, sample_id: int = 0,
         sample_id: Index of the sample to render
         out: Path for output
         to_json: Dump figure to json
-        cgr_output: Firsr CGR matrix
+        cgr_output: First CGR matrix
 
     Returns:
     """
@@ -101,20 +101,29 @@ def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
 
 
 def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
-                           alabels: List[str]
+                           alabels: List[str], prefix: Path = 'cm',
+                           format: str = 'png', to_json: bool = False
                            ) -> Dict[str, ConfusionMatrixDisplay]:
     """
     @Daniel
     Args:
+        format:
+        to_json:
         confMatrix:
         alabels:
 
     Returns:
     """
-    conf_matrix_display_objs = {
-        model: ConfusionMatrixDisplay(
-            confusion_matrix=matrix, display_labels=alabels).plot(
-            cmap='Blues', colorbar=False) for model, matrix in
-        confMatrix.items()
-    }
+    conf_matrix_display_objs = {}
+    for model, matrix in confMatrix.items():
+        filename = f'{prefix}_{model}.{format}'
+        cmd = ConfusionMatrixDisplay(confusion_matrix=matrix,
+                                     display_labels=alabels)
+        ax = cmd.plot(cmap='Blues', colorbar=False)
+        fig = ax.figure_
+        buf = BytesIO() if to_json else filename
+        fig.savefig(buf, format="png")
+        if to_json:
+            conf_matrix_display_objs[model] = b64encode(buf.getbuffer()
+                                                        ).decode("ascii")
     return conf_matrix_display_objs

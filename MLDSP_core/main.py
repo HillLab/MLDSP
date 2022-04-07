@@ -1,11 +1,9 @@
 """
 TBD @DANIEL
 """
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, \
-    Action
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from functools import partial
 from json import dumps
-from os import getenv
 from pathlib import Path
 from sys import stdout
 from typing import Optional, Union
@@ -19,7 +17,7 @@ from MLDSP_core.classification import classify_dismat, calcInterclustDist
 from MLDSP_core.one_dimensional_num_mapping import \
     one_dimensional_num_mapping_wrapper
 from MLDSP_core.preprocessing import preprocessing
-from MLDSP_core.utils import Logger, uprint
+from MLDSP_core.utils import Logger, uprint, PathAction, HandleSpaces
 from MLDSP_core.visualisation import plotCGR, plot3d, \
     displayConfusionMatrix
 
@@ -98,7 +96,8 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
                for model_name, model in full_model.items()}
     q_log.write(str(q_preds))
     if to_json:
-        json_str = dumps({'queryPredictions': q_preds})
+        json_str = dumps({'queryPredictions': {k: v.tolist(
+        ) for k, v in q_preds.items()}})
         uprint(json_str)
         return json_str
 
@@ -131,15 +130,15 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     """
     output_directory = Path(output_directory).resolve()
     results_path = output_directory.joinpath('Results', run_name).resolve()
-    try:
-        results_path.mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
-        uprint("This output directory already exists, consider changing"
-               " the directory or Run name\n")
     print_file = stdout
     if 'quiet' in kwargs:
         if kwargs['quiet']:
             print_file = results_path.joinpath('prints.txt')
+    try:
+        results_path.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        uprint("This output directory already exists, consider changing"
+               " the directory or Run name\n", print_file=print_file)
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
@@ -199,15 +198,14 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     mds_img_data = plot3d(distance_matrix, labels, out=mds,
                           dim_res_method=dim_reduction,
                           to_json=to_json)
-    cm_display_objs = displayConfusionMatrix(cmatrix, cm_labels)
+    prefix_viz = viz_path.joinpath('Confusion_matrix')
+    cm_display_objs = displayConfusionMatrix(cmatrix, cm_labels,
+                                             prefix=prefix_viz,
+                                             to_json=to_json)
     # Get intercluster distances
-    intercluster_dist = calcInterclustDist(
-        distance_matrix, labels)
+    intercluster_dist = calcInterclustDist(distance_matrix, labels)
     if not to_json:
         intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'))
-        for model, conf_mat in cm_display_objs.items():
-            fig = conf_mat.figure_
-            fig.savefig(viz_path.joinpath(f'Confusion matrix {model}'))
     outline = f'\n10X cross validation classifier accuracies:\n'
     outline += "\n".join([f"\t{m}: {ac}" for m, ac in accuracy.items()])
     log.write(outline)
@@ -215,8 +213,9 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     uprint('**** Processing completed ****\n', print_file=print_file)
     json_str = None
     if to_json:
+        j_cmatrix = {k: v.tolist() for k, v in cmatrix.items()}
         json_str = dumps({'mds': mds_img_data, 'cgr': cgr_img_data,
-                          'cMatrix': cmatrix, 'cMatrixLabels': cm_labels,
+                          'cMatrix': j_cmatrix, 'cMatrixLabels': cm_labels,
                           'cMatrix_plots': cm_display_objs,
                           'modelAcc': accuracy,
                           'interclusterDist': intercluster_dist.to_html()
@@ -225,47 +224,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     return json_str, med_len
 
 
-if __name__ == '__main__':
-    class PathAction(Action):
-        """
-        Class to set the action to store as path
-        """
-
-        def __call__(self, parser, namespace, values, option_string=None):
-            if not values:
-                parser.error("You need to provide a string with path or "
-                             "filename")
-            p = Path(values).resolve()
-            if not (p.is_file() or p.is_dir()):
-                p = Path(getenv(values)).resolve()
-
-            setattr(namespace, self.dest, p)
-
-
-    class HandleSpaces(Action):
-        """
-        Class to set the action to store as string
-        """
-
-        def __call__(self, parser, namespace, values, option_string=None):
-            if not values:
-                parser.error("You need to provide a string names or "
-                             "filename")
-            if isinstance(values, list):
-                p = ' '.join(values)
-            elif isinstance(values, str):
-                p = values
-            else:
-                raise Exception('Wrong Type')
-            choices = list(methods_list.keys())
-            if p not in choices:
-                exception_line = f"error: argument --method/-m: invalid " \
-                                 f"choice: '{p}' (choose from " \
-                                 f"{', '.join(choices)})"
-                raise Exception(exception_line)
-            setattr(namespace, self.dest, p)
-
-
+def execute():
     opt = ArgumentParser(usage='%(prog)s data_set_path metadata [options]',
                          formatter_class=ArgumentDefaultsHelpFormatter)
     opt.add_argument('train_set', help='Path to data set to train the'
@@ -306,3 +265,7 @@ if __name__ == '__main__':
                                          **vars(args))
     if not args.quiet:
         print(f"{'*' * 8}\n* DONE *\n{'*' * 8}")
+
+
+if __name__ == '__main__':
+    execute()
