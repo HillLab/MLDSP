@@ -7,7 +7,6 @@ from functools import partial
 from json import dumps
 from os import getenv
 from pathlib import Path
-from typing import Dict
 from typing import Optional, Union
 
 from dill import load, dump
@@ -76,7 +75,7 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
     print('\tProcessing query')
     query_results = Parallel(n_jobs=cpus)(delayed(compute)(
         seq=str(q_seqs[q_name]), name=q_name, results=q_results_path,
-        order=order, kmer=kmer, med_len=q_med_len, method=method,
+        order=order, kmer=kmer, med_len=q_med_len, method=methods_list[method],
         queryname='Query') for q_name in q_seqs.keys())
     q_abs_fft_output, q_fft_output, q_cgr_output, _ = zip(*query_results)
     # Build full distmat including train & query seqs
@@ -96,7 +95,7 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
         return dumps({'queryPredictions': q_preds})
 
 
-def startCalcProcess_train(train_set: Path, train_labels: Dict[str, str],
+def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
                            run_name: str, output_directory: Union[Path, str],
                            method: str = DEFAULT_METHOD, kmer: int = 7,
                            folds: int = 10, cpus: int = cpu_count(),
@@ -145,7 +144,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Dict[str, str],
     parallel_results = Parallel(n_jobs=cpus)(
         delayed(compute)(seq=str(seq_dict[name]), name=name, kmer=kmer,
                          results=results_path, order=order, med_len=med_len,
-                         method=method, label=cluster_dict[name]
+                         method=methods_list[method], label=cluster_dict[name]
                          ) for name in seq_dict.keys()
     )
 
@@ -179,7 +178,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Dict[str, str],
     if method == 'Pu/Py CGR' or method == 'Chaos Game Representation (CGR)':
         for value in set(labels):
             index = labels.index(value)
-            log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict)[index]}.npy')
+            log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy')
             out = viz_path.joinpath(f'CGR {value}.png')
             cgr_img_data = plotCGR(cgr_output, sample_id=index,
                                    out=out, to_json=to_json)
@@ -193,7 +192,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Dict[str, str],
     intercluster_dist = calcInterclustDist(
         distance_matrix, labels)
     if not to_json:
-        intercluster_dist.to_csv(viz_path.joinpath('Intercluster distance.csv'))
+        intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'))
         for model, conf_mat in cm_display_objs.items():
             fig = conf_mat.figure_
             fig.savefig(viz_path.joinpath(f'Confusion matrix {model}'))
@@ -228,6 +227,30 @@ if __name__ == '__main__':
             setattr(namespace, self.dest, p)
 
 
+    class HandleSpaces(Action):
+        """
+        Class to set the action to store as string
+        """
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            if not values:
+                parser.error("You need to provide a string names or "
+                             "filename")
+            if isinstance(values, list):
+                p = ' '.join(values)
+            elif isinstance(values, str):
+                p = values
+            else:
+                raise Exception('Wrong Type')
+            choices = list(methods_list.keys())
+            if p not in choices:
+                exception_line = f"error: argument --method/-m: invalid " \
+                                 f"choice: '{p}' (choose from " \
+                                 f"{', '.join(choices)})"
+                raise Exception(exception_line)
+            setattr(namespace, self.dest, p)
+
+
     opt = ArgumentParser(usage='%(prog)s data_set_path metadata [options]',
                          formatter_class=ArgumentDefaultsHelpFormatter)
     opt.add_argument('train_set', help='Path to data set to train the'
@@ -247,8 +270,8 @@ if __name__ == '__main__':
                      help='Order of the nucleotides in CGR, must be'
                           'uppercase')
     opt.add_argument('--kmer', '-k', help='Kmer size', default=5, type=int)
-    opt.add_argument('--method', '-m', default=DEFAULT_METHOD,
-                     choices=list(methods_list.keys()),
+    opt.add_argument('--method', '-m', default=DEFAULT_METHOD, nargs='+',
+                     action=HandleSpaces,
                      help='Name of the method (see more in the documentation)')
     opt.add_argument('--folds', '-f', default=10, type=int,
                      help='Number of folds for cross-validation')
@@ -261,7 +284,6 @@ if __name__ == '__main__':
                           'matrix.')
 
     args = opt.parse_args()
-
     train_out = startCalcProcess_train(**vars(args))
     if args.query_seq_path is not None:
         test_out = startCalcProcess_test(**vars(args))

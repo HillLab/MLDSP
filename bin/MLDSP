@@ -8,6 +8,7 @@ from pathlib import Path
 
 from joblib import cpu_count
 
+from MLDSP_core.__constants__ import DEFAULT_METHOD, methods_list
 from MLDSP_core.main import startCalcProcess_train, startCalcProcess_test
 
 if __name__ == '__main__':
@@ -27,12 +28,38 @@ if __name__ == '__main__':
             setattr(namespace, self.dest, p)
 
 
+    class HandleSpaces(Action):
+        """
+        Class to set the action to store as string
+        """
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            if not values:
+                parser.error("You need to provide a string names or "
+                             "filename")
+            if isinstance(values, list):
+                p = ' '.join(values)
+            elif isinstance(values, str):
+                p = values
+            else:
+                raise Exception('Wrong Type')
+            choices = list(methods_list.keys())
+            if p not in choices:
+                exception_line = f"error: argument --method/-m: invalid " \
+                                 f"choice: '{p}' (choose from " \
+                                 f"{', '.join(choices)})"
+                raise Exception(exception_line)
+            setattr(namespace, self.dest, p)
+
+
     opt = ArgumentParser(usage='%(prog)s data_set_path metadata [options]',
                          formatter_class=ArgumentDefaultsHelpFormatter)
     opt.add_argument('train_set', help='Path to data set to train the'
                                        ' models with', action=PathAction)
-    opt.add_argument('training_labels', help='CSV with the mapping of '
-                                             'labels and sequence names')
+    opt.add_argument('train_labels', help='CSV with the mapping of labels '
+                                          'and sequence names')
+    opt.add_argument('--query_seq_path', '-q', action=PathAction,
+                     default=None, help='Path to test set fasta(s)')
     opt.add_argument('--run_name', '-r', help='Name of the run',
                      default='Bacteria')
     opt.add_argument('--output_directory', '-o', default=Path(),
@@ -41,19 +68,23 @@ if __name__ == '__main__':
     opt.add_argument('--cpus', '-c', help='Number of cpus to use',
                      default=cpu_count(), type=int)
     opt.add_argument('--order', '-d', default='ACGT', type=str,
-                     help='Order of the nucleotides in CGR')
+                     help='Order of the nucleotides in CGR, must be'
+                          'uppercase')
     opt.add_argument('--kmer', '-k', help='Kmer size', default=5, type=int)
-    opt.add_argument('--method', '-m', default=14, type=int,
-                     choices=range(1, 17),
-                     help='Numeric representation of method (see more in'
-                          ' the documentation)')
+    opt.add_argument('--method', '-m', default=DEFAULT_METHOD, nargs='+',
+                     action=HandleSpaces,
+                     help='Name of the method (see more in the documentation)')
     opt.add_argument('--folds', '-f', default=10, type=int,
                      help='Number of folds for cross-validation')
     opt.add_argument('--to_json', '-j', default=False, action='store_true',
                      help='Number of folds for cross-validation')
+    opt.add_argument('--dim_reduction', '-i', default='mds',
+                     choices=['pca', 'mds', 'tsne'],
+                     help='Type of dimensionality reduction technique to'
+                          ' use in the visualization of the distance '
+                          'matrix.')
 
     args = opt.parse_args()
-
     train_out = startCalcProcess_train(**vars(args))
     if args.query_seq_path is not None:
         test_out = startCalcProcess_test(**vars(args))

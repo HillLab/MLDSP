@@ -47,11 +47,12 @@ def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
 
 
 def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
-            order: str = 'ACGT', **kwargs
+            label: Optional[str] = None, order: str = 'ACGT', **kwargs
             ) -> Tuple[ndarray, ...]:
     """
     Wrapper of CGR to compute PuPyCGR
     Args:
+        label:
         seq: sequence string
         name: name of the sequence being analysed
         kmer: Kmer value to use
@@ -62,15 +63,16 @@ def PuPyCGR(seq: str, name: str, kmer: int, results: Path,
     Returns:
     """
     return compute_cgr(seq=seq, name=name, kmer=kmer, results=results,
-                       order=order, pyrimidine=True)
+                       order=order, pyrimidine=True, label=label)
 
 
 def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
-                order: str = 'ACGT', **kwargs
-                ) -> Tuple[ndarray, ...]:
+                label: Optional[str] = None, order: str = 'ACGT',
+                **kwargs) -> Tuple[ndarray, ...]:
     """
     Wrapper of CGR to compute 1DPuPyCGR
     Args:
+        label:
         seq: sequence string
         name: name of the sequence being analysed
         kmer: Kmer value to use
@@ -81,7 +83,8 @@ def oneDPuPyCGR(seq: str, name: str, kmer: int, results: Path,
     Returns:
     """
     return compute_cgr(seq=seq, name=name, kmer=kmer, results=results,
-                       order=order, pyrimidine=True, last_only=True)
+                       order=order, pyrimidine=True, last_only=True,
+                       label=label)
 
 
 def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
