@@ -3,10 +3,13 @@ from collections import Counter
 from copy import deepcopy
 from io import BytesIO
 from pathlib import Path
+from sys import stdout
 from typing import Dict, Optional, Tuple, Union
 
 from chardet import detect
 from pyfaidx import Fasta
+
+from MLDSP_core.utils import uprint
 
 
 def csv2dict(infile: Path) -> Dict[str, str]:
@@ -34,9 +37,8 @@ def csv2dict(infile: Path) -> Dict[str, str]:
 
 
 def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
-                  prefix: str = 'Train') -> Tuple[Fasta, int,
-                                                  Optional[Dict[str, str]],
-                                                  Optional[Counter]]:
+                  prefix: str = 'Train', print_file: str = stdout
+                  ) -> Tuple[Fasta, int, Optional[Dict[str, str]], Optional[Counter]]:
     """
     TODO: update these doc strings
     Preprocessing of fasta sequences using BioPython into a database of
@@ -69,8 +71,8 @@ def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
     else:
         cluster_dict = cluster_stats = None
     if outfn.exists():
-        print(f'File {outfn.name} exists and will be used! If this is '
-              f'unintended, please remove the file\n')
+        uprint(f'File {outfn.name} exists and will be used! If this is '
+               f'unintended, please remove the file\n', print_file=print_file)
     else:
         for file in data_set.glob('*'):
             if file.suffix != '.fai' and '_all_seqs.fasta' not in str(file):

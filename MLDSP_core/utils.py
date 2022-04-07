@@ -3,6 +3,7 @@
 Script for utilitaran functions
 """
 from pathlib import Path
+from sys import stdout
 from typing import Union
 
 
@@ -38,3 +39,11 @@ class Logger(object):
         """
         with open(self.path.joinpath(self.filename), 'a') as logf:
             logf.write(content)
+
+
+def uprint(*args, print_file: str = stdout):
+    if isinstance(print_file, str):
+        with open(print_file, 'w') as outfile:
+            print(*args, file=outfile)
+    else:
+        print(*args)

@@ -83,9 +83,12 @@ if __name__ == '__main__':
                      help='Type of dimensionality reduction technique to'
                           ' use in the visualization of the distance '
                           'matrix.')
-
+    opt.add_argument('--quiet', '-z', default=False, action='store_true',
+                     help='Do not print anything to stdout but the json (if selected)')
     args = opt.parse_args()
-    train_out = startCalcProcess_train(**vars(args))
+    train_out, train_med_len = startCalcProcess_train(**vars(args))
     if args.query_seq_path is not None:
-        test_out = startCalcProcess_test(**vars(args))
-    print(f"{'*' * 8}\n* DONE *\n{'*' * 8}")
+        test_out = startCalcProcess_test(training_med=train_med_len,
+                                         **vars(args))
+    if not args.quiet:
+        print(f"{'*' * 8}\n* DONE *\n{'*' * 8}")

@@ -4,6 +4,7 @@
 from collections import defaultdict
 from functools import partial
 from itertools import product, combinations
+from sys import stdout
 from typing import Tuple, Dict, DefaultDict, List
 
 from numpy import array, ndarray, where, unique, zeros
@@ -17,14 +18,17 @@ from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
+from MLDSP_core.utils import uprint
+
 
 # noinspection PyArgumentEqualDefault
 def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
-                    cpus: int = 4) -> Tuple[float,
-                                            DefaultDict[str, float],
-                                            DefaultDict[str, ndarray],
-                                            DefaultDict[str, List[ndarray]],
-                                            Dict[str, Pipeline]]:
+                    cpus: int = 4, print_file: str = stdout
+                    ) -> Tuple[float,
+                               DefaultDict[str, float],
+                               DefaultDict[str, ndarray],
+                               DefaultDict[str, List[ndarray]],
+                               Dict[str, Pipeline]]:
     """
     Supervised ML model training & k-fold cross-validation
     
@@ -35,6 +39,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     labels.
     
     Args:
+        print_file:
         cpus:
         dismat: Pairwise distance matrix of all samples in training set
             with zero diagonal and of shape (n,n) where n sample size
@@ -76,13 +81,13 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         full_model[model_name] = pipe_model.fit(dismat, alabels)
         x_train, y_train = dismat[train_idx], alabels[train_idx]
         x_test, y_test = dismat[test_idx], alabels[test_idx]
-        print(f"Computing fold {fold}")
+        uprint(f"Computing fold {fold}", print_file=print_file)
         fitted = pipe_model.fit(x_train, y_train)
         prediction = fitted.predict(x_test)
         acc = accuracy_score(y_test, prediction)
         accuracies[model_name].append(acc)
         mean_model_accuracies[model_name] += acc
-        print(f'\tAccuracy of {model_name} = {acc}')
+        uprint(f'\tAccuracy of {model_name} = {acc}', print_file=print_file)
         cm = confusion_matrix(y_test, prediction, labels=list(unique(
             alabels)), normalize=None)
         aggregated_c_matrix[model_name] += cm
@@ -91,7 +96,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     # Mean accuracy value across all classifiers
     avg_accuracy = sum(mean_model_accuracies.values()) / (folds * len(
         mean_model_accuracies))
-    print(f"Average accuracy over all classifiers {avg_accuracy}")
+    uprint(f"Average accuracy over all classifiers {avg_accuracy}",
+           print_file=print_file)
 
     return avg_accuracy, mean_model_accuracies, aggregated_c_matrix, \
            misclassified_idx, full_model
