@@ -142,7 +142,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     med_len = median([len(x) for x in seq_dict.values()])
     corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
     full_model_path = results_path.joinpath('Trained_models.pkl')
-    if corr_fn.exists() or full_model_path.exists():
+    if corr_fn.exists() and full_model_path.exists():
         uprint("Training with this name has already be run. Using stored"
                "values", print_file=print_file)
         return None, med_len
