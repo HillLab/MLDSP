@@ -10,6 +10,8 @@ distmat.hdf5
 .python-version
 distmat.txt
 Results/**
+**seqs.fasta
+**seqs.fasta.fai
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
