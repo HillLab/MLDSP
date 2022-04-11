@@ -31,7 +31,7 @@ Once instlled simply call MLDSP:
 
 ```bash
 $ MLDSP -h
-usage: MLDSP_core data_set_path metadata [options]
+usage: MLDSP data_set_path metadata [options]
 
 positional arguments:
   train_set          Path to data set to train the models with
