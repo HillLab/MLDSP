@@ -47,6 +47,8 @@ class Logger(object):
 
 
 def uprint(*args, print_file: Union[str, Path, TextIOWrapper] = stdout):
+    parent = print_file.parent
+    parent.mkdir(exist_ok=True, parents=True)
     if isinstance(print_file, str) or isinstance(print_file, Path):
         with open(print_file, 'w') as outfile:
             outfile.write('\n'.join(args))
