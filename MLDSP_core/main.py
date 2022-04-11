@@ -149,8 +149,9 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     try:
         results_path.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        raise Exception("This output directory already exists, "
-                        "consider changing the directory or Run name")
+        if any(results_path.glob('[!prints.txt]')):
+            raise Exception("This output directory already exists, "
+                            "consider changing the directory or Run name")
     log = Logger(results_path, f'Training_Run_{run_name}.log')
     log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: {kmer}'
               f'\nMedian seq length: {med_len}\nDataset size: '
