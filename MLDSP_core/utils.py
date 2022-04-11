@@ -67,7 +67,10 @@ class PathAction(Action):
                          "filename")
         p = Path(values).resolve()
         if not (p.is_file() or p.is_dir()):
-            p = Path(getenv(values)).resolve()
+            if getenv(values) is not None:
+                p = Path(getenv(values)).resolve()
+            else:
+                p.mkdir(parents=True)
 
         setattr(namespace, self.dest, p)
 

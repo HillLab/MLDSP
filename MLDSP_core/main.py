@@ -241,7 +241,7 @@ def execute():
     opt.add_argument('--query_seq_path', '-q', action=PathAction,
                      default=None, help='Path to test set fasta(s)')
     opt.add_argument('--run_name', '-r', help='Name of the run',
-                     default='Bacteria')
+                     default='Default')
     opt.add_argument('--output_directory', '-o', default=Path(),
                      action=PathAction,
                      help='Path to the output directory')
