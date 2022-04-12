@@ -1,17 +1,14 @@
 __pycache__**
-Python/jupyter_main.py
-Python/processing.ipynb
-Python/matrixTeX.py
 MLDSP.code-workspace
 /plots/*
 **.DS_Store**
-distmat.hdf5
 .vscode
 .python-version
-distmat.txt
 Results/**
 **seqs.fasta
 **seqs.fasta.fai
+/data/Primates/testing
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
