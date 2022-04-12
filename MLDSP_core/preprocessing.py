@@ -68,6 +68,7 @@ def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
     outfn = data_set.joinpath(f'{prefix}_all_seqs.fasta').resolve() \
         if output_path is None else \
         output_path.joinpath(f'{prefix}_all_seqs.fasta').resolve()
+    outfn.parent.mkdir(exist_ok=True, parents=True)
     if metadata is not None:
         cluster_dict = csv2dict(metadata)
         cluster_stats = Counter(cluster_dict.values())
