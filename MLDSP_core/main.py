@@ -67,7 +67,8 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
         one_dimensional_num_mapping_wrapper
     q_seqs, q_nseq, _, _ = preprocessing(query_seq_path, None,
                                          prefix='Query',
-                                         print_file=print_file)
+                                         print_file=print_file,
+                                         output_path=results_path)
     q_seqs_len = [len(b) for b in q_seqs.values()]
     q_med_len = median(q_seqs_len)
     q_log = Logger(q_results_path, f'Query_run_{run_name}.log')
@@ -138,7 +139,8 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
-        train_set, train_labels, print_file=print_file)
+        train_set, train_labels, print_file=print_file,
+        output_path=results_path)
     med_len = median([len(x) for x in seq_dict.values()])
     corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
     full_model_path = results_path.joinpath('Trained_models.pkl')
