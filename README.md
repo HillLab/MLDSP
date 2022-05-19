@@ -46,9 +46,11 @@ optional arguments:
                         Unique name to track and store MLDSP run results (default: Bacteria)
   --output_directory OUTPUT_DIRECTORY, -o OUTPUT_DIRECTORY
                         Path to the output folder (default: current working directory)
-  --cpus CPUS, -c CPUS  Number of cpu cores to use (default: number of cores on your machine [int])
+  --cpus CPUS, -c CPUS  Number of cpu cores to use for parallel computation
+                        (default: number of cores on your machine [int])
   --order ORDER, -d ORDER
-                        Order of nucleotide vertex assignment in CGR, **DO NOT CHANGE** (default: ACGT)
+                        Order of nucleotide vertex assignment in CGR, **DO NOT CHANGE** 
+                        (default: ACGT)
   --kmer KMER, -k KMER  Kmer size for CGR (default: 7)
   --method [see __constants__.py string keys], -m [see __constants__.py string keys]
                         Numeric representation of method (see more in the
@@ -61,6 +63,9 @@ optional arguments:
   --quiet , -z          Option to supress command line output and redirect to prints.txt
 
 ```
-`train_set` must be a folder containing .fasta files only to be used for MLDSP training (10X cross validation).
-Files can be single fasta or multi-fasta; header names are used to track samples, file names are discarded.
-`training_labels` must be a .csv file with NO HEADER and two columns; first column is sample names matching fasta headers from `train_set`, second column is supervised learning class labels. Both column values should be strings with no special characters: anything that is not an alphanumeric, dash, underscore, or dot will be removed; spaces and directory operators (/, \\) will be replaced with underscore. Original files will not be modified.
+`train_set` must be a folder containing .fasta files only to be used for MLDSP training (10X cross validation).  
+Files can be single fasta or multi-fasta; header names are used to track samples, file names are discarded.  
+
+`training_labels` must be a .csv file with NO HEADER and two columns; first column is sample names matching fasta headers from `train_set`, second column is supervised learning class labels.  
+
+Both column values should be strings with no special characters: anything that is not an alphanumeric, dash, underscore, or dot will be removed; spaces and directory operators (/, \\) will be replaced with underscore. Original files will not be modified.
