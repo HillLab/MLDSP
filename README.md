@@ -13,15 +13,15 @@ If you have access to the repository and you have an active python virtual envir
 using the following command on any unix based terminal shell:
 
 ```bash
-$ pip install git+https://github.com/HillLab/MLDSP.git
+pip install git+https://github.com/HillLab/MLDSP.git
 ```
 This will give you access to the command-line interface.  
 If you are having trouble installing it directly, clone the repo, checkout the dev_segio branch and pip install it:
 
 ```bash
-$ git clone git@github.com:HillLab/MLDSP.git
-$ cd MLDSP
-$ pip install .
+git clone git@github.com:HillLab/MLDSP.git
+cd MLDSP
+pip install .
 ```
 
 It should install all dependencies required for running
