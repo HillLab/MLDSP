@@ -50,7 +50,7 @@ def uprint(*args, print_file: Union[str, Path, TextIOWrapper] = stdout):
     if isinstance(print_file, str) or isinstance(print_file, Path):
         parent = Path(print_file).parent
         parent.mkdir(exist_ok=True, parents=True)
-        with open(print_file, 'w') as outfile:
+        with open(print_file, 'a') as outfile:
             outfile.write('\n'.join(args))
     elif isinstance(print_file, TextIOWrapper):
         print(*args)
