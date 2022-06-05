@@ -75,7 +75,6 @@ def plotCGR(cgr_output: ndarray, labels: tuple, seq_dict,
     if to_json:
         cgrImgData = b64encode(buf.getbuffer()).decode("ascii")
         return cgrImgData
-    return cgrImgData
 
 
 def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
