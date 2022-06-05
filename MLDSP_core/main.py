@@ -204,21 +204,18 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
                                  cpus=cpus, print_file=print_file)
     cm_labels = unique(labels).tolist()
 
-    uprint('Scaling & data visualisation...\n', print_file=print_file)
-    viz_path = results_path.joinpath('Images').resolve()
     with open(full_model_path, 'wb') as model_path:
         dump(full_model, model_path)
+
+    uprint('Scaling & data visualisation...\n', print_file=print_file)
+    viz_path = results_path.joinpath('Images').resolve()
     if not to_json:
         viz_path.mkdir(parents=True, exist_ok=True)
     # CGR plotting
-    cgr_img_data = None
     if method == 'Pu/Py CGR' or method == 'Chaos Game Representation (CGR)':
-        for value in set(labels):
-            index = labels.index(value)
-            log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy\n')
-            out = viz_path.joinpath(f'CGR {value}.png')
-            cgr_img_data = plotCGR(cgr_output, sample_id=index,
-                                   out=out, to_json=to_json)
+        cgr_img_data = None
+        out = viz_path.joinpath(f'CGRs {run_name}.png')
+        cgr_img_data = plotCGR(cgr_output, labels, seq_dict, log, kmer, out, to_json)
     # 3d ModMap plotting
     mds = viz_path.joinpath('MoDmap.png')
     mds_img_data = plot3d(distance_matrix, labels, out=mds,
