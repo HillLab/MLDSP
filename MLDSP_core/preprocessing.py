@@ -37,7 +37,8 @@ def csv2dict(infile: Path) -> Dict[str, str]:
 
 
 def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
-                  prefix: str = 'Train', print_file: str = stdout
+                  prefix: str = 'Train', output_path: Optional[Path] = None,
+                  print_file: str = stdout
                   ) -> Tuple[Fasta, int, Optional[Dict[str, str]], Optional[Counter]]:
     """
     TODO: update these doc strings
@@ -64,7 +65,10 @@ def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
         return x.replace("/", "_").replace("\\", "_")
 
     data_set = Path(data_set).resolve()
-    outfn = data_set.joinpath(f'{prefix}_all_seqs.fasta').resolve()
+    outfn = data_set.joinpath(f'{prefix}_all_seqs.fasta').resolve() \
+        if output_path is None else \
+        output_path.joinpath(f'{prefix}_all_seqs.fasta').resolve()
+    outfn.parent.mkdir(exist_ok=True, parents=True)
     if metadata is not None:
         cluster_dict = csv2dict(metadata)
         cluster_stats = Counter(cluster_dict.values())

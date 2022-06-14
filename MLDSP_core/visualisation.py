@@ -41,25 +41,35 @@ def dimReduction(data: ndarray, n_dim: int, method: str) -> ndarray:
         return transformed
 
 
-def plotCGR(cgr_output: ndarray, sample_id: int = 0,
-            out: Path = Path('CGR.png'), to_json: bool = False
-            ) -> Union[None, b64encode]:
+def plotCGR(cgr_output: ndarray, labels: tuple, seq_dict,
+            log, kmer:  int, out: Path = Path('CGR.png'),
+            to_json: bool = False) -> Union[None, b64encode]:
     """
-    returns base64 encode of CGR image
+    returns matplotlib Figure object
 
     Args:
         sample_id: Index of the sample to render
         out: Path for output
         to_json: Dump figure to json
-        cgr_output: First CGR matrix
+        cgr_output: array containing all raw cgrs
 
-    Returns:
+    Returns: cgrFig
     """
-    cgrFig = Figure()
-    ax = cgrFig.subplots()
-    ax.matshow(cgr_output[sample_id], cmap=cm.gray_r)
-    ax.set_xticks([])
-    ax.set_yticks([])
+    cgrFig = Figure(constrained_layout=True)
+    unique_classes = set(labels)
+    axs = cgrFig.subplots(1,len(unique_classes))
+    counter = 0
+    for value in unique_classes:
+        subplot = axs[counter]
+        index = labels.index(value)
+        subplot.matshow(cgr_output[index], cmap=cm.gray_r)
+        subplot.set_title(f'CGR {value} (k={kmer})')
+        subplot.set_xticks([])
+        subplot.set_yticks(subplot.get_ylim(),labels=['C','A'])
+        ax2 = subplot.secondary_yaxis('right')
+        ax2.set_yticks(subplot.get_ylim(),labels=['G','T'])
+        log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy\n')
+        counter += 1
     buf = BytesIO() if to_json else out
     cgrFig.savefig(buf, format="png")
     if to_json:

@@ -13,12 +13,12 @@ from scipy import fft
 
 def cgr(chars: str, order: str = "ACGT", k: int = 6) -> ndarray:
     """
-    computes CGR representation in standard format: C top-left,
+    computes fCGR representation in standard format: C top-left,
     G top-right, A bottom-left, T bottom-right
 
     params chars: sequence
-    params order: chars to include in CGR
-    params k: value of k-mer
+    params order: characters and order to assign the fCGR vertices
+    params k: value of k-length oligomer size for fCGR
     """
     size = 2 ** k
     mid_cgr = 2 ** (k - 1)
@@ -93,9 +93,11 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
                 **kwargs
                 ) -> Tuple[ndarray, ndarray, ndarray, Optional[str]]:
     """
-    This function compute the CGR matrix for a sequence in seq_dict
+    Wrapper function to compute the fCGR, Purine-pyrimidine or 
+    last row CGR for a sequence in seq_dict
     Args:
-        last_only: takes only the last (bottom) row but all columns of cgr to make a 1DPuPyCGR
+        last_only: takes only the last (bottom) row but all columns 
+                   of cgr to make a 1DPuPyCGR
         pyrimidine: Replace purine for pyrimidines (PuPyCGR, 1DPuPyCGR)
         seq: sequence string
         name: name of the sequence

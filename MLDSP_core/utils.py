@@ -48,7 +48,9 @@ class Logger(object):
 
 def uprint(*args, print_file: Union[str, Path, TextIOWrapper] = stdout):
     if isinstance(print_file, str) or isinstance(print_file, Path):
-        with open(print_file, 'w') as outfile:
+        parent = Path(print_file).parent
+        parent.mkdir(exist_ok=True, parents=True)
+        with open(print_file, 'a') as outfile:
             outfile.write('\n'.join(args))
     elif isinstance(print_file, TextIOWrapper):
         print(*args)
@@ -67,7 +69,10 @@ class PathAction(Action):
                          "filename")
         p = Path(values).resolve()
         if not (p.is_file() or p.is_dir()):
-            p = Path(getenv(values)).resolve()
+            if getenv(values) is not None:
+                p = Path(getenv(values)).resolve()
+            else:
+                p.mkdir(parents=True)
 
         setattr(namespace, self.dest, p)
 

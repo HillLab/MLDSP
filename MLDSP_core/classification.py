@@ -78,25 +78,28 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     prod = product(pipes.items(), enumerate(kf.split(dismat, alabels)))
     for item in prod:
         (model_name, pipe_model), (fold, (train_idx, test_idx)) = item
-        full_model[model_name] = pipe_model.fit(dismat, alabels)
+        if fold == 0:
+            full_model[model_name] = pipe_model.fit(dismat, alabels)
         x_train, y_train = dismat[train_idx], alabels[train_idx]
         x_test, y_test = dismat[test_idx], alabels[test_idx]
-        uprint(f"Computing fold {fold}", print_file=print_file)
+        uprint(f"Computing fold {fold+1}\n", print_file=print_file)
         fitted = pipe_model.fit(x_train, y_train)
         prediction = fitted.predict(x_test)
         acc = accuracy_score(y_test, prediction)
         accuracies[model_name].append(acc)
         mean_model_accuracies[model_name] += acc
-        uprint(f'\tAccuracy of {model_name} = {acc}', print_file=print_file)
+        uprint(f'\tAccuracy of {model_name} = {acc}\n', print_file=print_file)
         cm = confusion_matrix(y_test, prediction, labels=list(unique(
             alabels)), normalize=None)
         aggregated_c_matrix[model_name] += cm
         misclassified_idx[model_name].append(where(
             y_test != prediction)[0])
     # Mean accuracy value across all classifiers
-    avg_accuracy = sum(mean_model_accuracies.values()) / (folds * len(
+    mean_model_accuracies.update((key,value/folds) for (key,value) \
+                                 in mean_model_accuracies.items())
+    avg_accuracy = sum(mean_model_accuracies.values()) / (len(
         mean_model_accuracies))
-    uprint(f"Average accuracy over all classifiers {avg_accuracy}",
+    uprint(f"Average accuracy over all classifiers {avg_accuracy}\n",
            print_file=print_file)
 
     return avg_accuracy, mean_model_accuracies, aggregated_c_matrix, \

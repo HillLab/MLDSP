@@ -1,5 +1,10 @@
 """
-TBD @DANIEL
+Main script for execution of MLDSP backend computation
+
+Functions:
+    startCalcProcess_train(**vars(args)) -> Results/{run_name}
+    startCalcProcess_test(**vars(args)) -> Results/{run_name}/Testing
+    execute(command line arguments)-> startCalcProcess_train(**vars(args)), Optional[startCalcProcess_test(**vars(args))]
 """
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from functools import partial
@@ -29,25 +34,35 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
                           order: str = 'ACGT', to_json: bool = True,
                           **kwargs) -> Optional[str]:
     """
-    Function to compute the prediction on a set of query sequences
-    @DANIEL
+    Function to compute the predicted class on a set of query
+    sequences with no label from a previously trained model.
     Args:
-        query_seq_path:
-        run_name:
-        output_directory:
-        method:
-        kmer:
-        cpus:
-        order:
-        to_json:
-        **kwargs:
+        query_seq_path: Path to folder of fastas to be classified
+        run_name: Unique name used to track datasets run
+        output_directory: path to desired output location for results
+        method: numerical representation method to be used, see args
+                for available options
+        kmer: size of k-length oligomers to be used for fCGR generation
+        cpus: number of cpu cores to use for parallel computing
+        order: assignment of fCGR vertex labels: 
+               'bottom left, top left, top right, bottom right'
+               Should not be modified unless using non-standard
+               fCGR or input sequences is not nucleotides.
+        to_json: Boolean to specify command-line output rather
+                 than GUI json output
+        **kwargs: Other keyword arguments, corresponding to function 
+                  variables, none defined
 
     Returns:
-
+        Query_run_{run_name}.log: Text log file
+        
     """
     output_directory = Path(output_directory).resolve()
     results_path = output_directory.joinpath('Results', run_name).resolve()
+    # Path to corresponding distance matrix from training run, required for
+    # calculating query feature vectors (input into classifiers)
     corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
+    # Path to pre-trained ML models
     full_model_path = results_path.joinpath('Trained_models.pkl')
     if not corr_fn.exists() or not full_model_path.exists():
         raise Exception('No training data in your path! please train the'
@@ -61,13 +76,14 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
     if 'quiet' in kwargs:
         if kwargs['quiet']:
             print_file = results_path.joinpath('prints.txt')
-    uprint(f'Query data path set to be: {query_seq_path}\nPreprocessing',
+    uprint(f'Query data path set to be: {query_seq_path}\nPreprocessing...',
            print_file=print_file)
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
     q_seqs, q_nseq, _, _ = preprocessing(query_seq_path, None,
                                          prefix='Query',
-                                         print_file=print_file)
+                                         print_file=print_file,
+                                         output_path=q_results_path)
     q_seqs_len = [len(b) for b in q_seqs.values()]
     q_med_len = median(q_seqs_len)
     q_log = Logger(q_results_path, f'Query_run_{run_name}.log')
@@ -76,8 +92,8 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
                 f'Median seq length: {q_med_len}\n'
                 f'NOTE: for one dimensional numerical representations '
                 f'query seqs are normalized to training set median seq '
-                f'length Dataset size:{q_nseq}\n')
-    uprint('\tProcessing query', print_file=print_file)
+                f'length:{training_med}\nDataset size:{q_nseq}\n')
+    uprint('\tProcessing query\n', print_file=print_file)
     query_results = Parallel(n_jobs=cpus)(delayed(compute)(
         seq=str(q_seqs[q_name]), name=q_name, results=q_results_path,
         order=order, kmer=kmer, med_len=training_med,
@@ -92,7 +108,8 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
     del full_matrix
     q_out_fn = q_results_path.joinpath('dist_mat_query.npy').resolve()
     save(str(q_out_fn), q_distance_matx)
-    uprint('Running query on trained models', print_file=print_file)
+    uprint('Predicting query labels with trained models\n',
+           print_file=print_file)
     q_preds = {model_name: model.predict(q_distance_matx)
                for model_name, model in full_model.items()}
     q_log.write(str(q_preds))
@@ -138,19 +155,21 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
-        train_set, train_labels, print_file=print_file)
+        train_set, train_labels, print_file=print_file,
+        output_path=results_path)
     med_len = median([len(x) for x in seq_dict.values()])
     corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
     full_model_path = results_path.joinpath('Trained_models.pkl')
     if corr_fn.exists() and full_model_path.exists():
         uprint("Training with this name has already be run. Using stored"
-               "values", print_file=print_file)
+               " values\n", print_file=print_file)
         return None, med_len
     try:
         results_path.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        raise Exception("This output directory already exists, "
-                        "consider changing the directory or Run name")
+        if any(results_path.glob('[!prints.txt]')):
+            raise Exception("This output directory already exists, "
+                            "consider changing the directory or Run name")
     log = Logger(results_path, f'Training_Run_{run_name}.log')
     log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: {kmer}'
               f'\nMedian seq length: {med_len}\nDataset size: '
@@ -167,7 +186,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     )
 
     abs_fft_output, fft_output, cgr_output, labels = zip(*parallel_results)
-    uprint('Building distance matrix', print_file=print_file)
+    uprint('Building distance matrix\n', print_file=print_file)
     corr_fun = partial(corrcoef, abs_fft_output)
     distance_matrix = (1 - corr_fun()) / 2
 
@@ -185,21 +204,18 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
                                  cpus=cpus, print_file=print_file)
     cm_labels = unique(labels).tolist()
 
-    uprint('Scaling & data visualisation...', print_file=print_file)
-    viz_path = results_path.joinpath('Images').resolve()
     with open(full_model_path, 'wb') as model_path:
         dump(full_model, model_path)
+
+    uprint('Scaling & data visualisation...\n', print_file=print_file)
+    viz_path = results_path.joinpath('Images').resolve()
     if not to_json:
         viz_path.mkdir(parents=True, exist_ok=True)
     # CGR plotting
-    cgr_img_data = None
     if method == 'Pu/Py CGR' or method == 'Chaos Game Representation (CGR)':
-        for value in set(labels):
-            index = labels.index(value)
-            log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy\n')
-            out = viz_path.joinpath(f'CGR {value}.png')
-            cgr_img_data = plotCGR(cgr_output, sample_id=index,
-                                   out=out, to_json=to_json)
+        cgr_img_data = None
+        out = viz_path.joinpath(f'CGRs {run_name}.png')
+        cgr_img_data = plotCGR(cgr_output, labels, seq_dict, log, kmer, out, to_json)
     # 3d ModMap plotting
     mds = viz_path.joinpath('MoDmap.png')
     mds_img_data = plot3d(distance_matrix, labels, out=mds,
@@ -241,7 +257,7 @@ def execute():
     opt.add_argument('--query_seq_path', '-q', action=PathAction,
                      default=None, help='Path to test set fasta(s)')
     opt.add_argument('--run_name', '-r', help='Name of the run',
-                     default='Bacteria')
+                     default='Default')
     opt.add_argument('--output_directory', '-o', default=Path(),
                      action=PathAction,
                      help='Path to the output directory')
@@ -250,14 +266,15 @@ def execute():
     opt.add_argument('--order', '-d', default='ACGT', type=str,
                      help='Order of the nucleotides in CGR, must be'
                           'uppercase')
-    opt.add_argument('--kmer', '-k', help='Kmer size', default=5, type=int)
+    opt.add_argument('--kmer', '-k', help='Kmer size', default=7, type=int)
     opt.add_argument('--method', '-m', default=DEFAULT_METHOD, nargs='+',
                      action=HandleSpaces,
                      help='Name of the method (see more in the documentation)')
     opt.add_argument('--folds', '-f', default=10, type=int,
                      help='Number of folds for cross-validation')
     opt.add_argument('--to_json', '-j', default=False, action='store_true',
-                     help='Number of folds for cross-validation')
+                     help='Boolean, to output results in json for API to'
+                     'MLDSP-web frontend')
     opt.add_argument('--dim_reduction', '-i', default='mds',
                      choices=['pca', 'mds', 'tsne'],
                      help='Type of dimensionality reduction technique to'
