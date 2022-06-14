@@ -10,7 +10,7 @@ from typing import Tuple, Dict, DefaultDict, List
 from numpy import array, ndarray, where, unique, zeros
 from pandas import DataFrame
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
@@ -78,8 +78,6 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     prod = product(pipes.items(), enumerate(kf.split(dismat, alabels)))
     for item in prod:
         (model_name, pipe_model), (fold, (train_idx, test_idx)) = item
-        if fold == 0:
-            full_model[model_name] = pipe_model.fit(dismat, alabels)
         x_train, y_train = dismat[train_idx], alabels[train_idx]
         x_test, y_test = dismat[test_idx], alabels[test_idx]
         uprint(f"Computing fold {fold+1}\n", print_file=print_file)
@@ -94,6 +92,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         aggregated_c_matrix[model_name] += cm
         misclassified_idx[model_name].append(where(
             y_test != prediction)[0])
+        if fold == 9:
+            full_model[model_name] = pipe_model.fit(dismat, alabels)
     # Mean accuracy value across all classifiers
     mean_model_accuracies.update((key,value/folds) for (key,value) \
                                  in mean_model_accuracies.items())

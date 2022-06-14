@@ -154,6 +154,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
             print_file = results_path.joinpath('prints.txt')
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
+    uprint('Building Fasta index\n', print_file=print_file)
     seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
         train_set, train_labels, print_file=print_file,
         output_path=results_path)
