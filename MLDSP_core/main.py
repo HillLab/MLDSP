@@ -202,7 +202,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     folds = folds if total_seq > folds else total_seq
     mean_accuracy, accuracy, cmatrix, mis_classified_dict, \
     full_model = classify_dismat(distance_matrix, array(labels), folds,
-                                 cpus=cpus, print_file=print_file)
+                                 log, cpus=cpus, print_file=print_file)
     cm_labels = unique(labels).tolist()
 
     with open(full_model_path, 'wb') as model_path:
