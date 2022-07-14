@@ -86,11 +86,12 @@ def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
         str(outfn), key_function=replace, duplicate_action="first",
         sequence_always_upper=True
     )
+    #Check all samples in fasta are present in metadata (reverse need not be true)
     if metadata is not None:
-        difference = set(cluster_dict.keys()).difference(seq_dict.keys())
+        difference = set(seq_dict.keys()).difference(cluster_dict.keys())
         if difference:
-            raise Exception(f"Your metadata and your fasta don't match,"
-                            f" check your input\nCulprit(s): "
-                            f"{''.join(difference)}")
+            raise Exception(f"{''.join(difference)}"
+                            f"Your metadata and your fasta don't match,"
+                            f" check your input\nCulprit(s): ")
     total_seq = len(seq_dict.keys())
     return seq_dict, total_seq, cluster_dict, cluster_stats
