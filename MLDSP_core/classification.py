@@ -88,7 +88,9 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         if n_classes <= 2:
             prob = prob[:,1]
         prediction = fitted.predict(x_test)
+        # macro-average of recall scores per class 
         acc = balanced_accuracy_score(y_test, prediction)
+        # redundant never used, key: dict value: list of (balanced) accuracy
         accuracies[model_name].append(acc)
         mean_model_accuracies[model_name] += acc
         auroc_score = roc_auc_score(y_test, prob, multi_class='ovo')

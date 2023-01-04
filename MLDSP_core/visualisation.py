@@ -109,7 +109,7 @@ def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
         # return mdsGraphJSON
         return fig.to_json()
     else:
-        fig.write_image(out)
+        fig.write_json(out)
 
 
 def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
@@ -131,7 +131,7 @@ def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
         filename = f'{prefix}_{model}.{format}'
         cmd = ConfusionMatrixDisplay(confusion_matrix=matrix,
                                      display_labels=alabels)
-        ax = cmd.plot(cmap='Blues', colorbar=False)
+        ax = cmd.plot(cmap='Blues', colorbar=False, values_format='.0f')
         fig = ax.figure_
         buf = BytesIO() if to_json else filename
         fig.savefig(buf, format="png")
