@@ -12,10 +12,10 @@ from json import dumps
 from pathlib import Path
 from sys import stdout
 from typing import Optional, Union
-
+from collections import Counter
 from dill import load, dump
 from joblib import Parallel, delayed, cpu_count
-from numpy import corrcoef, save, array, median, unique
+from numpy import corrcoef, save, array, median, unique, max, min
 
 from MLDSP_core.__constants__ import methods_list, DEFAULT_METHOD, CGRS
 from MLDSP_core.classification import classify_dismat, calcInterclustDist
@@ -86,10 +86,13 @@ def startCalcProcess_test(query_seq_path: Path, run_name: str,
                                          output_path=q_results_path)
     q_seqs_len = [len(b) for b in q_seqs.values()]
     q_med_len = median(q_seqs_len)
+    q_max_len = max(q_seqs_len)
+    q_min_len = min(q_seqs_len)
     q_log = Logger(q_results_path, f'Query_run_{run_name}.log')
     q_log.write(f'Run_name: {run_name}(same as training run)\n'
                 f'Method: {method}\nkmer:{kmer}\n'
-                f'Median seq length: {q_med_len}\n'
+                f'Median seq length: {q_med_len} Shortest sequence: {q_min_len} '
+                f'Longest sequence: {q_max_len}\n'
                 f'NOTE: for one dimensional numerical representations '
                 f'query seqs are normalized to training set median seq '
                 f'length:{training_med}\nDataset size:{q_nseq}\n')
@@ -155,10 +158,13 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     compute = methods_list[method] if method in CGRS else \
         one_dimensional_num_mapping_wrapper
     uprint('Building Fasta index\n', print_file=print_file)
-    seq_dict, total_seq, cluster_dict, cluster_stats = preprocessing(
+    seq_dict, total_seq, cluster_dict = preprocessing(
         train_set, train_labels, print_file=print_file,
         output_path=results_path)
-    med_len = median([len(x) for x in seq_dict.values()])
+    seqs_len = [len(x) for x in seq_dict.values()]
+    med_len = median(seqs_len)
+    max_len = max(seqs_len)
+    min_len = min(seqs_len)
     corr_fn = results_path.joinpath(f'{run_name}_partialcorr.pckl')
     full_model_path = results_path.joinpath('Trained_models.pkl')
     if corr_fn.exists() and full_model_path.exists():
@@ -173,8 +179,9 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
                             "consider changing the directory or Run name")
     log = Logger(results_path, f'Training_Run_{run_name}.log')
     log.write(f'Run_name: {run_name}\nMethod: {method}\nkmer: {kmer}'
-              f'\nMedian seq length: {med_len}\nDataset size: '
-              f'{total_seq}\nClass sizes:{cluster_stats}\n')
+              f'\nMedian seq length: {med_len} Shortest sequence: {min_len} '
+              f'Longest sequence: {max_len}\n'
+              f'Dataset size: {total_seq}\n')
 
     uprint('Generating numerical sequences, applying DFT, computing '
            'magnitude spectra .... \n', print_file=print_file)
@@ -187,6 +194,9 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     )
 
     abs_fft_output, fft_output, cgr_output, labels = zip(*parallel_results)
+    log.write(f'Class sizes:\n')
+    [log.write(f'{key}:{value}, ') for (key, value) in Counter(labels).items()]
+    log.write(f'\n')
     uprint('Building distance matrix\n', print_file=print_file)
     corr_fun = partial(corrcoef, abs_fft_output)
     distance_matrix = (1 - corr_fun()) / 2
@@ -202,7 +212,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     folds = folds if total_seq > folds else total_seq
     mean_accuracy, accuracy, cmatrix, mis_classified_dict, \
     full_model = classify_dismat(distance_matrix, array(labels), folds,
-                                 cpus=cpus, print_file=print_file)
+                                 log, cpus=cpus, print_file=print_file)
     cm_labels = unique(labels).tolist()
 
     with open(full_model_path, 'wb') as model_path:
@@ -218,7 +228,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
         out = viz_path.joinpath(f'CGRs {run_name}.png')
         cgr_img_data = plotCGR(cgr_output, labels, seq_dict, log, kmer, out, to_json)
     # 3d ModMap plotting
-    mds = viz_path.joinpath('MoDmap.png')
+    mds = viz_path.joinpath('MoDmap.json')
     mds_img_data = plot3d(distance_matrix, labels, out=mds,
                           dim_res_method=dim_reduction,
                           to_json=to_json)
@@ -229,7 +239,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     # Get intercluster distances
     intercluster_dist = calcInterclustDist(distance_matrix, labels)
     if not to_json:
-        intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'))
+        intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'),float_format="%.3f")
     outline = f'\n10X cross validation classifier accuracies:\n'
     outline += "\n".join([f"\t{m}: {ac}" for m, ac in accuracy.items()])
     log.write(outline)

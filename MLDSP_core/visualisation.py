@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Union, DefaultDict, List, Dict
 
 from matplotlib import cm
-from matplotlib.figure import Figure
+from matplotlib import pyplot as plt
+# from matplotlib.figure import Figure
 from numpy import ndarray
 from pandas import DataFrame
 from plotly import express as px
@@ -55,19 +56,20 @@ def plotCGR(cgr_output: ndarray, labels: tuple, seq_dict,
 
     Returns: cgrFig
     """
-    cgrFig = Figure(constrained_layout=True)
+    extent = 0,1,0,1
     unique_classes = set(labels)
-    axs = cgrFig.subplots(1,len(unique_classes))
+    cgrFig, axs = plt.subplots(1,len(unique_classes),figsize=(28, 7))
     counter = 0
     for value in unique_classes:
         subplot = axs[counter]
         index = labels.index(value)
-        subplot.matshow(cgr_output[index], cmap=cm.gray_r)
+        subplot.matshow(cgr_output[index],cmap=cm.gray_r, extent = extent)
         subplot.set_title(f'CGR {value} (k={kmer})')
-        subplot.set_xticks([])
-        subplot.set_yticks(subplot.get_ylim(),labels=['C','A'])
-        ax2 = subplot.secondary_yaxis('right')
-        ax2.set_yticks(subplot.get_ylim(),labels=['G','T'])
+        subplot.set_axis_off()
+        subplot.text(-0.1,-0.1,"A",fontsize=15)
+        subplot.text(1,-0.1,"T",fontsize=15)
+        subplot.text(-0.1,1.1,"C",fontsize=15)
+        subplot.text(1,1.1,"G",fontsize=15)
         log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy\n')
         counter += 1
     buf = BytesIO() if to_json else out
@@ -107,7 +109,7 @@ def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
         # return mdsGraphJSON
         return fig.to_json()
     else:
-        fig.write_image(out)
+        fig.write_json(out)
 
 
 def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
@@ -129,7 +131,7 @@ def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
         filename = f'{prefix}_{model}.{format}'
         cmd = ConfusionMatrixDisplay(confusion_matrix=matrix,
                                      display_labels=alabels)
-        ax = cmd.plot(cmap='Blues', colorbar=False)
+        ax = cmd.plot(cmap='Blues', colorbar=False, values_format='.0f')
         fig = ax.figure_
         buf = BytesIO() if to_json else filename
         fig.savefig(buf, format="png")

@@ -1,5 +1,4 @@
 from codecs import EncodedFile
-from collections import Counter
 from copy import deepcopy
 from io import BytesIO
 from pathlib import Path
@@ -39,7 +38,7 @@ def csv2dict(infile: Path) -> Dict[str, str]:
 def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
                   prefix: str = 'Train', output_path: Optional[Path] = None,
                   print_file: str = stdout
-                  ) -> Tuple[Fasta, int, Optional[Dict[str, str]], Optional[Counter]]:
+                  ) -> Tuple[Fasta, int, Optional[Dict[str, str]]]:
     """
     TODO: update these doc strings
     Preprocessing of fasta sequences using BioPython into a database of
@@ -71,14 +70,13 @@ def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
     outfn.parent.mkdir(exist_ok=True, parents=True)
     if metadata is not None:
         cluster_dict = csv2dict(metadata)
-        cluster_stats = Counter(cluster_dict.values())
     else:
-        cluster_dict = cluster_stats = None
+        cluster_dict = None
     if outfn.exists():
         uprint(f'File {outfn.name} exists and will be used! If this is '
                f'unintended, please remove the file\n', print_file=print_file)
     else:
-        for file in data_set.glob('*'):
+        for file in data_set.glob('[!.]*'):
             if file.suffix != '.fai' and '_all_seqs.fasta' not in str(file):
                 with open(file) as infile, open(outfn, 'a') as outfile:
                     outfile.write(f'{infile.read().strip()}\n')
@@ -86,11 +84,12 @@ def preprocessing(data_set: Union[Path, str], metadata: Optional[Path],
         str(outfn), key_function=replace, duplicate_action="first",
         sequence_always_upper=True
     )
+    #Check all samples in fasta are present in metadata (reverse need not be true)
     if metadata is not None:
-        difference = set(cluster_dict.keys()).difference(seq_dict.keys())
+        difference = set(seq_dict.keys()).difference(cluster_dict.keys())
         if difference:
-            raise Exception(f"Your metadata and your fasta don't match,"
-                            f" check your input\nCulprit(s): "
-                            f"{''.join(difference)}")
+            raise Exception(f"{''.join(difference)}"
+                            f"Your metadata and your fasta don't match,"
+                            f" check your input\nCulprit(s): ")
     total_seq = len(seq_dict.keys())
-    return seq_dict, total_seq, cluster_dict, cluster_stats
+    return seq_dict, total_seq, cluster_dict
