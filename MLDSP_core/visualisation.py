@@ -43,7 +43,7 @@ def dimReduction(data: ndarray, n_dim: int, method: str) -> ndarray:
 
 
 def plotCGR(cgr_output: ndarray, labels: tuple, seq_dict,
-            log, kmer:  int, out: Path = Path('CGR.png'),
+            log, kmer:  int, out: Path = Path('CGR.svg'),
             to_json: bool = False) -> Union[None, b64encode]:
     """
     returns matplotlib Figure object
@@ -73,13 +73,14 @@ def plotCGR(cgr_output: ndarray, labels: tuple, seq_dict,
         log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy\n')
         counter += 1
     buf = BytesIO() if to_json else out
-    cgrFig.savefig(buf, format="png")
+    plt.tight_layout()
+    cgrFig.savefig(buf, format="svg")
     if to_json:
         cgrImgData = b64encode(buf.getbuffer()).decode("ascii")
         return cgrImgData
 
 
-def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
+def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.json',
            dim_res_method: str = 'mds', to_json: bool = False
            ) -> Union[None, dumps]:
     """
@@ -114,7 +115,7 @@ def plot3d(dist_matrix: ndarray, labels: list, out: Path = 'MDS.png',
 
 def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
                            alabels: List[str], prefix: Path = 'cm',
-                           format: str = 'png', to_json: bool = False
+                           format: str = 'svg', to_json: bool = False
                            ) -> Dict[str, ConfusionMatrixDisplay]:
     """
     @Daniel
@@ -131,10 +132,11 @@ def displayConfusionMatrix(confMatrix: DefaultDict[str, ndarray],
         filename = f'{prefix}_{model}.{format}'
         cmd = ConfusionMatrixDisplay(confusion_matrix=matrix,
                                      display_labels=alabels)
-        ax = cmd.plot(cmap='Blues', colorbar=False, values_format='.0f')
+        ax = cmd.plot(cmap='Blues', colorbar=False, values_format='.0f',xticks_rotation=90)
         fig = ax.figure_
+        fig.tight_layout()
         buf = BytesIO() if to_json else filename
-        fig.savefig(buf, format="png")
+        fig.savefig(buf, format="svg")
         if to_json:
             conf_matrix_display_objs[model] = b64encode(buf.getbuffer()
                                                         ).decode("ascii")

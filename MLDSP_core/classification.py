@@ -28,7 +28,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
                                DefaultDict[str, float],
                                DefaultDict[str, ndarray],
                                DefaultDict[str, List[ndarray]],
-                               Dict[str, Pipeline]]:
+                               Dict[str, Pipeline],
+                               Dict[str,list]]:
     """
     Supervised ML model training & k-fold cross-validation
     
@@ -72,6 +73,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     accuracies = defaultdict(list)
     misclassified_idx = defaultdict(list)
     mean_model_accuracies = defaultdict(float)
+    class_reports = defaultdict(list)
     aggregated_c_matrix = defaultdict(partial(zeros, (
         n_classes, n_classes)))
     kf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=23)
@@ -94,6 +96,8 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         accuracies[model_name].append(acc)
         mean_model_accuracies[model_name] += acc
         auroc_score = roc_auc_score(y_test, prob, multi_class='ovo')
+        report = classification_report(y_test, prediction,labels=labels,output_dict=True)
+        class_reports[model_name].append(report)
         log.write(f'Classification results for {model_name} fold {fold+1}:\n'
                   f'Area Under the Receiver Operating Characteristic Curve: {auroc_score}\n'
                   f'{classification_report(y_test, prediction,labels=labels)}\n')
@@ -113,7 +117,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
            print_file=print_file)
 
     return avg_accuracy, mean_model_accuracies, aggregated_c_matrix, \
-           misclassified_idx, full_model
+           misclassified_idx, full_model, class_reports
 
 
 def calcInterclustDist(distMatrix: ndarray, labels: Tuple[str]

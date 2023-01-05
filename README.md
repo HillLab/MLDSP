@@ -3,9 +3,9 @@
 Machine Learning with Digital Signal Processing (MLDSP) is an open-source, alignment-free, ultrafast, computationally
 lightweight, and standalone software tool for comparison and analysis of DNA sequences. MLDSP is a general-purpose tool
 that can be used for a variety of applications such as taxonomic classification, disease classification, virus subtype
-classification, evolutionary analyses, among others. It leverages the concept of a genomic signature extracted via a
+classification, among others. It leverages the concept of a genomic signature extracted via a
 Chaos Game Representation (CGR) of the DNA sequence. This is then used to generate an engineered feature vector for use
-in supervised machine learning classification of samples.
+in supervised machine learning classification of samples. Currently sample classification is focused on model validation via 10-fold cross validation with sample prediction only in the context of an individual trained model, see below for details.
 
 ## Installing MLDSP command line interface
 
@@ -59,7 +59,7 @@ optional arguments:
                         Number of folds for cross-validation (default: 10)
   --dim_reduction ['pca', 'mds', 'tsne'], -i ['pca', 'mds', 'tsne']
                         Type of dimensionality reduction technique to use in the 
-                        visualization of the distance matrix. (default: mds)
+                        visualization of the training distance matrix. (default: mds)
   --quiet , -z          Option to supress command line output and redirect to prints.txt
 
 ```
@@ -68,4 +68,7 @@ Files can be single fasta or multi-fasta; header names are used to track samples
 
 `training_labels` must be a .csv file with NO HEADER and two columns; first column is sample names matching fasta headers from `train_set`, second column is supervised learning class labels.  
 
-Both column values should be strings with no special characters: anything that is not an alphanumeric, dash, underscore, or dot will be removed; spaces and directory operators (/, \\) will be replaced with underscore. Original files will not be modified.
+Both column values should be strings with no special characters: anything that is not an alphanumeric, dash, underscore, or dot will be removed; spaces and directory operators (/, \\) will be replaced with underscore. Original files will not be modified.  
+`--query_seq_path` is the flag for providing unlabeled data for sample classification. Same conditions as `train_set` apply and class prediction i.e. sample classification can only be performed during a given not a posteriori.
+## Notes
+Additional sample predictions can be done from the Trained ML models but MLDSP CLI MUST be re run from the same location as previous with the same `--run name` and results output in the original output location (either default or same `--output_directory`). Optional arguments relating to CLI behaviour (`--quiet`,`--cpus`)

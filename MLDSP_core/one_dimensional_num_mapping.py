@@ -213,7 +213,7 @@ def num_mapping_Doublet(sq: ndarray) -> ndarray:
 
 def one_dimensional_num_mapping_wrapper(seq: str, name: str,
                                         method: Callable, results: Path,
-                                        med_len: int, label: Optional[str],
+                                        med_len: int, label: Optional[str] = None,
                                         **kwargs
                                         ) -> Tuple[Any, Any, None,
                                                    Optional[str]]:
