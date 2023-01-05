@@ -6,6 +6,9 @@ Functions:
     startCalcProcess_test(**vars(args)) -> Results/{run_name}/Testing
     execute(command line arguments)-> startCalcProcess_train(**vars(args)), Optional[startCalcProcess_test(**vars(args))]
 """
+# import cProfile
+# profiler = cProfile.Profile()
+# profiler.enable()
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from functools import partial
 from json import dumps
@@ -334,7 +337,7 @@ def execute():
                                          **vars(args))
     if not args.quiet:
         print(f"{'*' * 8}\n* DONE *\n{'*' * 8}")
-
-
+# profiler.disable()
+# profiler.dump_stats(f'{args.run_name}_profile.prof')
 if __name__ == '__main__':
     execute()
