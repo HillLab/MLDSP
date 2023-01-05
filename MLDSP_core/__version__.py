@@ -1,4 +1,4 @@
 """
 Version of the package MLDSP
 """
-version = '0.0.2'
+version = '0.0.3'

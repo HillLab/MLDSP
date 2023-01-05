@@ -13,9 +13,9 @@ If you have access to the repository and you have an active python virtual envir
 using the following command on any unix based terminal shell:
 
 ```bash
-pip install git+https://github.com/HillLab/MLDSP.git
+python -m pip install -e git+https://github.com/HillLab/MLDSP.git#egg=MLDSP
 ```
-This will give you access to the command-line interface.  
+This will give you access to the command-line interface, and will allow update anytime a new version is pushed to the github.  
 If you are having trouble installing it directly, clone the repo, checkout the dev_segio branch and pip install it:
 
 ```bash
@@ -24,7 +24,7 @@ cd MLDSP
 pip install .
 ```
 
-It should install all dependencies required for running
+It should install all dependencies required for running. PLEASE RESTART YOUR TERMINAL after installation or update.
 
 ## Running MLDSP CLI
 
