@@ -6,9 +6,9 @@ Functions:
     startCalcProcess_test(**vars(args)) -> Results/{run_name}/Testing
     execute(command line arguments)-> startCalcProcess_train(**vars(args)), Optional[startCalcProcess_test(**vars(args))]
 """
-# import cProfile
-# profiler = cProfile.Profile()
-# profiler.enable()
+import cProfile
+profiler = cProfile.Profile()
+profiler.enable()
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from functools import partial
 from json import dumps
@@ -217,7 +217,8 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
 
     abs_fft_output, fft_output, cgr_output, labels = zip(*parallel_results)
     log.write(f'Class sizes:\n')
-    [log.write(f'{key}:{value}, ') for (key, value) in Counter(labels).items()]
+    class_sizes = Counter(labels)
+    [log.write(f'{key}:{value}, ') for (key, value) in class_sizes.items()]
     log.write(f'\n')
     uprint('Building distance matrix\n', print_file=print_file)
     # Partial function combining the Pearson correlation coefficient function
@@ -238,7 +239,8 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
 
     uprint('Performing classification .... \n', print_file=print_file)
     # ML classification
-    folds = folds if total_seq > folds else total_seq
+    smallest_class_count = class_sizes.most_common()[-1][1]
+    folds = folds if smallest_class_count > folds else smallest_class_count
     mean_accuracy, accuracy, cmatrix, mis_classified_dict, \
     full_model, class_reports = classify_dismat(distance_matrix, array(labels), folds,
                                  log, cpus=cpus, print_file=print_file)
@@ -263,7 +265,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
         out = viz_path.joinpath(f'CGRs {run_name}.svg')
         cgr_img_data = plotCGR(cgr_output, labels, seq_dict, log, kmer, out, to_json)
     # 3d ModMap plotting
-    mds = viz_path.joinpath('MoDmap.json')
+    mds = viz_path.joinpath(f'MoDmap_{dim_reduction}.json')
     mds_img_data = plot3d(distance_matrix, labels, out=mds,
                           dim_res_method=dim_reduction,
                           to_json=to_json)
@@ -277,7 +279,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     if not to_json:
         intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'),float_format="%.3f")
     # Print overall accuracies
-    outline = f'\n10X cross validation classifier accuracies:\n'
+    outline = f'\n10X cross validation classifier balanced accuracies:\n'
     outline += "\n".join([f"\t{m}: {ac}" for m, ac in accuracy.items()])
     log.write(outline)
 
@@ -337,7 +339,7 @@ def execute():
                                          **vars(args))
     if not args.quiet:
         print(f"{'*' * 8}\n* DONE *\n{'*' * 8}")
-# profiler.disable()
-# profiler.dump_stats(f'{args.run_name}_profile.prof')
+    profiler.disable()
+    profiler.dump_stats(f'{args.run_name}_profile.prof')
 if __name__ == '__main__':
     execute()

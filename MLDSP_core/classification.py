@@ -7,7 +7,7 @@ from itertools import product, combinations
 from sys import stdout
 from typing import Tuple, Dict, DefaultDict, List
 
-from numpy import array, ndarray, where, unique, zeros
+from numpy import array, ndarray, where, unique, zeros, ix_
 from pandas import DataFrame
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import balanced_accuracy_score, classification_report
@@ -81,8 +81,10 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
     prod = product(pipes.items(), enumerate(kf.split(dismat, alabels)))
     for item in prod:
         (model_name, pipe_model), (fold, (train_idx, test_idx)) = item
-        x_train, y_train = dismat[train_idx], alabels[train_idx]
-        x_test, y_test = dismat[test_idx], alabels[test_idx]
+        # only select rows (samples) and columns (features) of train indices
+        x_train, y_train = dismat[ix_(train_idx,train_idx)], alabels[train_idx]
+        # x_test must be test_tix rows (samples) but train_idx columns to have same feature length as training set
+        x_test, y_test = dismat[ix_(test_idx,train_idx)], alabels[test_idx]
         uprint(f"Computing fold {fold+1} of {model_name}\n", print_file=print_file)
         fitted = pipe_model.fit(x_train, y_train)
         prob = fitted.predict_proba(x_test)
@@ -96,24 +98,25 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         accuracies[model_name].append(acc)
         mean_model_accuracies[model_name] += acc
         auroc_score = roc_auc_score(y_test, prob, multi_class='ovo')
-        report = classification_report(y_test, prediction,labels=labels,output_dict=True)
+        # Classification report gives unbalanced 'accuracy'
+        report = classification_report(y_test, prediction,target_names=labels,output_dict=True, zero_division=0)
         class_reports[model_name].append(report)
         log.write(f'Classification results for {model_name} fold {fold+1}:\n'
                   f'Area Under the Receiver Operating Characteristic Curve: {auroc_score}\n'
-                  f'{classification_report(y_test, prediction,labels=labels)}\n')
-        # uprint(f'\tAccuracy of {model_name} = {acc}\n', print_file=print_file)
+                  f'{classification_report(y_test, prediction,target_names=labels,zero_division=0)}\n')
+        # uprint(f'\tBalanced accuracy of {model_name} = {acc}\n', print_file=print_file)
         cm = confusion_matrix(y_test, prediction, labels=labels, normalize=None)
         aggregated_c_matrix[model_name] += cm
         misclassified_idx[model_name].append(where(
             y_test != prediction)[0])
         if fold == folds-1:
             full_model[model_name] = pipe_model.fit(dismat, alabels)
-    # Mean accuracy value across all classifiers
+    # Mean balanced accuracy value across all classifiers
     mean_model_accuracies.update((key,value/folds) for (key,value) \
                                  in mean_model_accuracies.items())
     avg_accuracy = sum(mean_model_accuracies.values()) / (len(
         mean_model_accuracies))
-    uprint(f"Average accuracy over all classifiers {avg_accuracy}\n",
+    uprint(f"Average balanced accuracy over all classifiers {avg_accuracy}\n",
            print_file=print_file)
 
     return avg_accuracy, mean_model_accuracies, aggregated_c_matrix, \
