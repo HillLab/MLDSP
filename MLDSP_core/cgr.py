@@ -109,7 +109,7 @@ def compute_cgr(seq: str, name: str, results: Path, kmer: int = 5,
     Returns:
 
     """
-    if pyrimidine:
+    if pyrimidine or last_only:
         seq = seq.replace('G', 'A').replace('C', 'T')
     seq_new = re.split('N+',seq) #remove N's from seq and split into contigs
     cgr_raw = frompyfunc(cgr,3,1)(seq_new, order, kmer).sum(axis=0)

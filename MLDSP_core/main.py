@@ -277,7 +277,7 @@ def startCalcProcess_train(train_set: Path, train_labels: Union[Path, str],
     # Get intercluster distances
     intercluster_dist = calcInterclustDist(distance_matrix, labels)
     if not to_json:
-        intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'),float_format="%.3f")
+        intercluster_dist.to_csv(viz_path.joinpath('Intercluster_distance.csv'),float_format="%.3E")
     # Print overall accuracies
     outline = f'\n10X cross validation classifier balanced accuracies:\n'
     outline += "\n".join([f"\t{m}: {ac}" for m, ac in accuracy.items()])

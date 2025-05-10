@@ -70,7 +70,7 @@ def plotCGR(cgr_output: ndarray, labels: tuple, seq_dict,
         subplot.text(1,-0.1,"T",fontsize=15)
         subplot.text(-0.1,1.1,"C",fontsize=15)
         subplot.text(1,1.1,"G",fontsize=15)
-        log.write(f'CGR {value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy\n')
+        log.write(f'{value}: cgr_k={kmer}_{list(seq_dict.keys())[index]}.npy,\n')
         counter += 1
     buf = BytesIO() if to_json else out
     plt.tight_layout()

@@ -83,7 +83,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         (model_name, pipe_model), (fold, (train_idx, test_idx)) = item
         # only select rows (samples) and columns (features) of train indices
         x_train, y_train = dismat[ix_(train_idx,train_idx)], alabels[train_idx]
-        # x_test must be test_tix rows (samples) but train_idx columns to have same feature length as training set
+        # x_test must be test_idx rows (samples) but take train_idx columns to have same feature length as training set
         x_test, y_test = dismat[ix_(test_idx,train_idx)], alabels[test_idx]
         uprint(f"Computing fold {fold+1} of {model_name}\n", print_file=print_file)
         fitted = pipe_model.fit(x_train, y_train)
@@ -96,6 +96,7 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
         acc = balanced_accuracy_score(y_test, prediction)
         # redundant never used, key: dict value: list of (balanced) accuracy
         accuracies[model_name].append(acc)
+        # Here used to for balanced accuracy
         mean_model_accuracies[model_name] += acc
         auroc_score = roc_auc_score(y_test, prob, multi_class='ovo')
         # Classification report gives unbalanced 'accuracy'
@@ -111,9 +112,10 @@ def classify_dismat(dismat: ndarray, alabels: ndarray, folds: int,
             y_test != prediction)[0])
         if fold == folds-1:
             full_model[model_name] = pipe_model.fit(dismat, alabels)
-    # Mean balanced accuracy value across all classifiers
+    # Mean balanced accuracy value across folds per classifiers
     mean_model_accuracies.update((key,value/folds) for (key,value) \
                                  in mean_model_accuracies.items())
+    # Mean balanced accuracy value across all classifiers
     avg_accuracy = sum(mean_model_accuracies.values()) / (len(
         mean_model_accuracies))
     uprint(f"Average balanced accuracy over all classifiers {avg_accuracy}\n",
